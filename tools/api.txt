@@ -1,0 +1,28 @@
+
+要求
+
+1.这里是接口地址请求链接，
+
+curl ^"http://yapi.u-breath.cn:9009/api/project/get?id=309^" ^
+  -H ^"Accept: application/json, text/plain, */*^" ^
+  -H ^"Accept-Language: zh-CN,zh;q=0.9^" ^
+  -H ^"Connection: keep-alive^" ^
+  -b ^"_yapi_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjYxMCwiaWF0IjoxNzcyNDUwMzYwLCJleHAiOjE3NzMwNTUxNjB9.Ojg_dLbDqF72dFfNRJFMP-Vo63QW6mMsOJewBfXk_IY; _yapi_uid=610^" ^
+  -H ^"Referer: http://yapi.u-breath.cn:9009/project/309^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36^" ^
+  --insecure
+  接口返回
+  {"errcode":0,"errmsg":"成功！","data":{"count":52,"total":3,"list":[{"edit_uid":0,"status":"done","api_opened":false,"tag":[],"_id":28081,"title":"设置通用配置","path":"/api/settings/setCommonSetting","catid":1668,"method":"POST","project_id":309,"uid":402,"add_time":1767606186},{"edit_uid":0,"status":"done","api_opened":false,"tag":[],"_id":28073,"title":"获取报告默认标题","path":"/api/settings/getDefaultReportTitleSettings","catid":1668,"method":"POST","project_id":309,"uid":402,"add_time":1767606184}]}}
+
+
+ 2.设置控制模块的接口请求链接
+  curl ^"http://yapi.u-breath.cn:9009/api/interface/list_cat?page=1^&limit=20^&catid=1666^" ^
+  -H ^"Accept: application/json, text/plain, */*^" ^
+  -H ^"Accept-Language: zh-CN,zh;q=0.9^" ^
+  -H ^"Connection: keep-alive^" ^
+  -b ^"_yapi_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjYxMCwiaWF0IjoxNzcyNDUwMzYwLCJleHAiOjE3NzMwNTUxNjB9.Ojg_dLbDqF72dFfNRJFMP-Vo63QW6mMsOJewBfXk_IY; _yapi_uid=610^" ^
+  -H ^"Referer: http://yapi.u-breath.cn:9009/project/309/interface/api/cat_1666^" ^
+  -H ^"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36^" ^
+  --insecure
+  接口返回如下
+  {"errcode":0,"errmsg":"成功！","data":{"count":8,"total":1,"list":[{"edit_uid":0,"status":"done","api_opened":false,"tag":[],"_id":28062,"method":"POST","title":"获取仪器信息","path":"/api/device/getDevInstrumentInfo","catid":1666,"project_id":309,"uid":402,"add_time":1767582458},{"edit_uid":0,"status":"done","api_opened":false,"tag":[],"_id":28064,"method":"POST","title":"获取设备电量","path":"/api/device/getBatteryStatus","catid":1666,"project_id":309,"uid":402,"add_time":1767582459}]}}
