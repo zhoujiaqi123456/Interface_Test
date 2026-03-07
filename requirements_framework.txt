@@ -1,0 +1,25 @@
+# 接口自动化框架依赖
+
+# Web请求
+requests>=2.25.0
+urllib3>=1.26.0
+
+# YAML处理
+ruamel.yaml>=0.17.0
+
+# 测试框架
+pytest>=7.0.0
+pytest-html>=3.0.0
+pytest-xdist>=3.0.0
+
+# 测试报告
+allure-pytest>=2.12.0
+
+# JSON处理
+jsonpath>=0.82
+
+# 日志
+loguru>=0.6.0
+
+# 其他
+pyyaml>=6.0

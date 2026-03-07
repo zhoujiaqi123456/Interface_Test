@@ -1,199 +1,284 @@
 # -*- coding:utf-8 -*-
-'''
-
-'''
+"""
+从YAPI接口地址获取接口数据并生成YAML文件
+支持新的接口格式：http://yapi.u-breath.cn:9009/api/project/get?id=309
+"""
 import requests
-from common import logs
-import time
 import os
-from ruamel import yaml
+import time
 import json
+from ruamel import yaml
+
 
 class GetYapi(object):
+    """从YAPI接口获取数据并生成YAML文件"""
 
-    def __init__(self,userapi, passwdapi, group_id):
-        self.logs = logs.MyLog()
-        self.data = {'email': userapi,
-                     'password': passwdapi}
-        self.pwd = passwdapi
-        self.group_id = group_id
-        self.session = requests.session()
-        self.apiurl = "http://192.168.238.242:3000"
-        #self.path_data_lists = []  # 接口数据(list)
-        self.pathdicts = {}  #存取单个从yaml内抓去的数据
-        self.count = 0   #统计接口总数
-        self.filecount = 0  #统计yaml总数
-        self.root_dir = os.path.dirname(os.path.abspath("."))
-        self.yaml_dir = ""  #写入yaml的路径
-        self.pathid = ""   #用于写入总文件内的ID
-        self.total_file = os.path.join(self.root_dir,"total_iface_info.yaml")
-        self.id_list = set()
-        self.total_data = {}  #存总的接口数据
-        #读取总接口信息文件,用于判断新增接口
-        with open(self.total_file,encoding='utf-8') as cf:
-            data = yaml.load(cf, Loader=yaml.Loader)
-            if data:
-                for key in data.keys():
-                      self.id_list.add(key)
-        loginheader = {'Content-Type': 'application/json;charset=utf-8'}
-        #登录
-        res = self.session.post(url=self.apiurl + "/api/user/login", json=self.data,verify=False, headers=loginheader)
-        self.logs.info("登录yapi结果：{}".format(res.json().get("errmsg")))
-        #登录后爬取yaml数据
-
+    def __init__(self, project_id=None, base_url=None, cookie=None, headers=None):
+        """
+        初始化
+        :param project_id: 项目ID
+        :param base_url: YAPI地址，默认：http://yapi.u-breath.cn:9009
+        :param cookie: 登录cookie，格式："_yapi_token=xxx; _yapi_uid=xxx"
+        :param headers: 请求头字典
+        """
+        self.base_url = base_url or "http://yapi.u-breath.cn:9009"
+        self.project_id = project_id
+        self.cookie = cookie
+        self.count = 0  # 统计接口总数
+        self.filecount = 0  # 统计yaml总数
+        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.yaml_dir = os.path.join(self.root_dir, "testdata")
+        self.api_dir = os.path.join(self.root_dir, "apimap")
+        
+        # 默认请求头
+        self.default_headers = {
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'zh-CN,zh;q=0.9',
+            'Connection': 'keep-alive',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36'
+        }
+        if headers:
+            self.default_headers.update(headers)
+        
+        # 请求cookie
+        self.cookies = {}
+        if cookie:
+            for item in cookie.split(';'):
+                key, value = item.strip().split('=', 1)
+                self.cookies[key] = value
 
     def create_yaml_by_yapi(self):
-        self.__get_mode_id()
+        """从YAPI创建YAML文件"""
+        self._get_module_list()
+        print(f"\n✅ 完成！共处理 {self.count} 个接口，生成 {self.filecount} 个YAML文件")
 
+    def _get_module_list(self):
+        """获取模块列表"""
+        print(f"📥 正在获取项目 {self.project_id} 的模块列表...")
+        
+        url = f"{self.base_url}/api/project/get?id={self.project_id}"
+        res = self._request(url)
+        
+        if not res or res.get("errcode") != 0:
+            print(f"❌ 获取项目信息失败: {res.get('errmsg', '未知错误')}")
+            return
+        
+        data = res.get("data", {})
+        project_name = data.get("name", f"project_{self.project_id}")
+        basepath = data.get("basepath", "")
+        
+        print(f"📦 项目名称: {project_name}")
+        print(f"📦 基础路径: {basepath}")
+        
+        # 获取分类列表
+        cat_list = data.get("cat", [])
+        print(f"📦 找到 {len(cat_list)} 个分类")
+        
+        for cat in cat_list:
+            cat_id = cat.get("_id")
+            cat_name = cat.get("name", f"cat_{cat_id}")
+            print(f"\n📂 处理分类: {cat_name} (ID: {cat_id})")
+            self._get_interface_list(cat_id, cat_name, basepath)
 
-    def __get_mode_id(self):
-        """
-        获取path信息 根据产品id(group_id) 获取对应的模块id
-        """
-        getid = {'group_id': self.group_id, 'page': '1', 'limit': '500000'}
-        res = self.session.get(url=self.apiurl + "/api/project/list", verify=False, params=getid)
-        #获取模块列表
-        ids = res.json().get("data").get("list")
-        for i in range(len(ids)):
-            self.pathmodlename = ids[i].get("name")
-            if self.pathmodlename == "DRCC":
-                # 根据模块名称创建yaml文件夹层
-                self.yaml_dir = os.path.join(self.root_dir,"update",self.pathmodlename)
-                if os.path.exists(self.yaml_dir) is False:
-                    os.makedirs(self.yaml_dir)
-                self.basepath = ids[i].get("basepath")    #获取基地址，用于路径拼接
-                self.__get_pathid_by_mouled_id(ids[i].get("_id"))  #获取模块ID，并调用处理接口的方法
+    def _get_interface_list(self, cat_id, cat_name, basepath):
+        """获取接口列表"""
+        url = f"{self.base_url}/api/interface/list_cat"
+        params = {
+            "page": 1,
+            "limit": 1000,
+            "catid": cat_id
+        }
+        
+        res = self._request(url, params=params)
+        
+        if not res or res.get("errcode") != 0:
+            print(f"❌ 获取接口列表失败: {res.get('errmsg', '未知错误')}")
+            return
+        
+        data = res.get("data", {})
+        interface_list = data.get("list", [])
+        
+        print(f"📋 找到 {len(interface_list)} 个接口")
+        
+        # 创建模块目录
+        module_dir = os.path.join(self.yaml_dir, self._sanitize_filename(cat_name))
+        if not os.path.exists(module_dir):
+            os.makedirs(module_dir)
+            print(f"📁 创建目录: {module_dir}")
+        
+        for interface in interface_list:
+            self._process_interface(interface, cat_name, module_dir, basepath)
 
+    def _process_interface(self, interface, cat_name, module_dir, basepath):
+        """处理单个接口"""
+        interface_id = interface.get("_id")
+        print(f"\n🔧 处理接口 (ID: {interface_id}): {interface.get('title')}")
+        
+        # 获取接口详情
+        url = f"{self.base_url}/api/interface/get?id={interface_id}"
+        res = self._request(url)
+        
+        if not res or res.get("errcode") != 0:
+            print(f"❌ 获取接口详情失败: {res.get('errmsg', '未知错误')}")
+            return
+        
+        interface_data = res.get("data", {})
+        self._create_yaml_file(interface_data, cat_name, module_dir, basepath)
 
-    def __get_pathid_by_mouled_id(self, _id):
-        """通过模块id找寻path—id
-        :param _id: 模块id
-        """
-        res = self.session.get(self.apiurl + "/api/interface/list?page=1&limit=9999&project_id=%s" % _id,verify=False)
-        ids = res.json().get("data").get("list")
-        #获取单个接口信息的ID
-        for i in range(len(ids)):
-            self.pathid = ids[i].get("_id")
-            self.logs.info("接口ID为{}".format(self.pathid))
-            self.__get_pathdata_by_pathid(self.pathid)
-
-
-    def __get_pathdata_by_pathid(self, pathid):
-        """根据pathid获取每个接口的详细信息
-
-        :param pathid: 接口id
-        """
-        #将数据写入caseyaml
-        data_dict = {}
-        res = self.session.get(url=self.apiurl + "/api/interface/get?id=%s" % pathid, verify=False).json()
-        pathdata = res.get("data")
-        data_dict["modle_name"] = self.pathmodlename  # 接口所属模块名称
-        #拼接case_suite
-        name = pathdata.get("query_path").get("path").split('/')
-        case_suite = name[-1].lstrip(':')+str(self.pathid)+"_"+"test"
-        #处理要写入yaml的数据
-        data_dict["case_suite"] = case_suite  #yaml文件名
-        data_dict["descrption"] = pathdata.get("title")  # 接口名称
-        data_dict["module_class"] = "Test"+ str(self.pathid) # 接口名称case_suite.replace("_",'')+
-        data_dict["url"] = self.basepath + pathdata.get("path")  # 接口地址
-        data_dict["method"] = pathdata.get("method")  # 接口请求方法
-        if pathdata.get("req_headers"):
-            data_dict["headers"] = pathdata.get("req_headers")[0].get("value")  #获取请求头Content-Type
-        params_data = {}  # 请求表单的表单数据
-        if pathdata.get("req_query"):
-            for requestdatas in pathdata.get("req_query"):
-                params_data[requestdatas.get("name")] = ""
-        data_dict['params'] = params_data
-        key_value_dict = {}  # 请求表单的表单数据
-        #判断是否有数据再取值
-        if pathdata.get("req_body_other"):
-            json_data = json.loads(pathdata.get("req_body_other"))
-            self.logs.info("获取出来的json参数为{}".format(json_data))
-            if json_data.get("properties"):
-                for k,v in json_data.get("properties").items():
-                    key_value_dict[k] = "" #取requestdata的key和备注，在写入yaml时还需要再处理
-        data_dict["json"] = key_value_dict  #后去请请json内容
-        data_dict["up_中time"] = time.strftime("%Y-%m-%d %H:%M:%S",
-                                             time.localtime(int(pathdata.get("up_time"))))  # 接口变更时间
-        data_dict["add_time"] = time.strftime("%Y-%m-%d %H:%M:%S",
-                                              time.localtime(int(pathdata.get("add_time"))))  # 接口添加时间
-        data_dict["path_creat_user"] = pathdata.get("username")  # 接口创建者
-        self.pathdicts = data_dict
-        # 将数据写入totalyaml
-        if self.pathid not in self.id_list or self.id_list is None:
-            #创建总用例文件
-            self.__create_total_file()
-            #创建yaml用例文件
-            self.__create_yaml_file()
-
-        #self.path_data_lists.append(data_dict)  # 追加每个接口的数据信息到列表中
-        self.count += 1
-        self.logs.info(("第{}个接口{}的数据已经抓取完毕").format(self.count, data_dict["url"]))   #打印日志
-
-
-    def __create_total_file(self):
-        """创建总接口信息文件，用于过滤已经成生过文件的接口"""
-        self.total_data = {}
-        self.total_data[self.pathid] = self.pathdicts.get("descrption")
-        with open(self.total_file, 'a', encoding='utf-8') as s:
-            content = yaml.dump(self.total_data, Dumper=yaml.RoundTripDumper,allow_unicode=True)
-            s.write(content)
-
-
-    def __create_yaml_file(self):
-        """创建yaml文件"""
-        #存yaml列表
-        self.logs.info("接口获取的数据为{}".format(self.pathdicts))
-        yaml_data = {}   #整个文档
-        testinfo = {}   #存入test_info
-        testinfo["case_suite"] = self.pathdicts.get("case_suite")
-        testinfo["descrpiton"] = self.pathdicts.get("descrption")
-        testinfo["module_class"] = self.pathdicts.get("module_class")
-        yaml_data["testinfo"] = testinfo
-
-        yaml_data["premise"] = ""
-        yaml_data["set_up"] = ""
-        yaml_data["tear_down"] = ""
-        #加入case文件
-        case_list = []
-        case_data = {}
-        case_data["test_name"] =""
-        case_data["info"] = self.pathdicts.get("descrption")
-        case_data["mark"] = ""
-        case_data["method"] = self.pathdicts.get("method")
-        case_data["url"] = self.pathdicts.get("url")
-        case_data["headers"] = {"Authorization":'$token'}
-        case_data["timeout"] = 8
-        case_data["params"] = self.pathdicts.get("params")
-        case_data["data"] = ""
-        case_data["files"] = ""
-        case_data["json"] = self.pathdicts.get("json")
-        case_data["status"] = ""
-        case_data["extract"] = ""
-        case_data["expects"] = ""
-        case_list.append(case_data)
-        #加入case
-        yaml_data["test_case"] = case_list
-
-        # 装写入的配置文件写入到yaml
-        yaml_file_name = self.pathdicts.get("case_suite")+".yaml"
-        yaml_data_file = os.path.join(self.yaml_dir,yaml_file_name)
+    def _create_yaml_file(self, interface_data, cat_name, module_dir, basepath):
+        """创建YAML文件"""
+        interface_id = interface_data.get("_id")
+        title = interface_data.get("title", "")
+        path = interface_data.get("path", "")
+        method = interface_data.get("method", "GET")
+        
+        # 生成YAML文件名
+        file_name = f"{self._sanitize_filename(title)}_{interface_id}.yaml"
+        yaml_file = os.path.join(module_dir, file_name)
+        
+        # 解析请求参数
+        yaml_content = {
+            "testinfo": {
+                "interface_id": interface_id,
+                "title": title,
+                "category": cat_name,
+                "description": interface_data.get("desc", "")
+            },
+            "request": {
+                "url": basepath + path,
+                "method": method,
+                "headers": self._parse_headers(interface_data),
+                "params": self._parse_params(interface_data),
+                "data": self._parse_data(interface_data),
+                "json": self._parse_json(interface_data),
+                "files": "",
+                "timeout": 8
+            },
+            "test_case": [
+                {
+                    "case_name": "冒烟测试",
+                    "description": "基本功能测试",
+                    "mark": "smoke",
+                    "skip": False,
+                    "extract": "",
+                    "validate": {
+                        "status_code": 200,
+                        "contains": "",
+                        "json_path": "",
+                        "json_value": ""
+                    }
+                }
+            ]
+        }
+        
+        # 写入YAML文件
+        with open(yaml_file, 'w', encoding='utf-8') as f:
+            yaml.dump(yaml_content, f, Dumper=yaml.RoundTripDumper, allow_unicode=True)
+        
         self.filecount += 1
-        self.logs.info("创建第{}个文件".format(self.filecount))
-        with open(yaml_data_file, 'w', encoding='utf-8') as s:
-            content = yaml.dump(yaml_data, Dumper=yaml.RoundTripDumper,allow_unicode=True)
-            s.write(content)
+        self.count += 1
+        print(f"✅ 生成YAML: {file_name}")
 
+    def _parse_headers(self, interface_data):
+        """解析请求头"""
+        req_headers = interface_data.get("req_headers", [])
+        headers = {}
+        for header in req_headers:
+            headers[header.get("name", "")] = header.get("value", "")
+        
+        # 默认添加Authorization
+        if "Authorization" not in headers:
+            headers["Authorization"] = "$token"
+        
+        return headers
+
+    def _parse_params(self, interface_data):
+        """解析URL参数"""
+        req_query = interface_data.get("req_query", [])
+        params = {}
+        for param in req_query:
+            params[param.get("name", "")] = ""
+        return params
+
+    def _parse_data(self, interface_data):
+        """解析表单数据"""
+        req_body_form = interface_data.get("req_body_form", [])
+        data = {}
+        for form in req_body_form:
+            data[form.get("name", "")] = ""
+        return data
+
+    def _parse_json(self, interface_data):
+        """解析JSON数据"""
+        req_body_other = interface_data.get("req_body_other", "")
+        if req_body_other:
+            try:
+                json_schema = json.loads(req_body_other)
+                if json_schema.get("type") == "object":
+                    properties = json_schema.get("properties", {})
+                    result = {}
+                    for key, value in properties.items():
+                        if value.get("type") == "string":
+                            result[key] = ""
+                        elif value.get("type") == "number":
+                            result[key] = 0
+                        elif value.get("type") == "boolean":
+                            result[key] = True
+                        elif value.get("type") == "array":
+                            result[key] = []
+                        elif value.get("type") == "object":
+                            result[key] = {}
+                        else:
+                            result[key] = ""
+                    return result
+            except json.JSONDecodeError:
+                pass
+        return {}
+
+    def _request(self, url, params=None, method="GET"):
+        """发送请求"""
+        try:
+            if method.upper() == "GET":
+                res = requests.get(
+                    url,
+                    params=params,
+                    headers=self.default_headers,
+                    cookies=self.cookies,
+                    verify=False,
+                    timeout=10
+                )
+            else:
+                res = requests.post(
+                    url,
+                    params=params,
+                    headers=self.default_headers,
+                    cookies=self.cookies,
+                    verify=False,
+                    timeout=10
+                )
+            return res.json()
+        except Exception as e:
+            print(f"❌ 请求失败: {e}")
+            return None
+
+    def _sanitize_filename(self, filename):
+        """清理文件名中的非法字符"""
+        import re
+        # 替换特殊字符为下划线
+        filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+        # 去除首尾空格
+        filename = filename.strip()
+        # 限制长度
+        if len(filename) > 50:
+            filename = filename[:50]
+        return filename
 
 
 if __name__ == '__main__':
-    data =  GetYapi(userapi="xiongting@hzmc.com.cn", passwdapi="24totoro-", group_id="12")
-    data.create_yaml_by_yapi()
-
-
-
-
-
-
-
-
+    # 示例使用
+    yapi = GetYapi(
+        project_id=309,
+        base_url="http://yapi.u-breath.cn:9009",
+        cookie="_yapi_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjYxMCwiaWF0IjoxNzcyNDUwMzYwLCJleHAiOjE3NzMwNTUxNjB9.Ojg_dLbDqF72dFfNRJFMP-Vo63QW6mMsOJewBfXk_IY; _yapi_uid=610"
+    )
+    yapi.create_yaml_by_yapi()

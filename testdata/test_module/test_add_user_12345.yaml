@@ -1,0 +1,43 @@
+testinfo:
+  interface_id: 12345
+  title: 添加用户
+  category: 用户管理
+  description: 添加新用户到系统
+
+request:
+  url: /api/user/add
+  method: POST
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  params: {}
+  data: ""
+  json:
+    username: ""
+    email: ""
+    age: 0
+    active: true
+  files: ""
+  timeout: 8
+
+test_case:
+  - case_name: 冒烟测试
+    description: 基本功能测试
+    mark: smoke
+    skip: false
+    extract: ""
+    validate:
+      status_code: 200
+      contains: "success"
+      json_path: "$.code"
+      json_value: "0"
+  - case_name: 边界测试
+    description: 参数边界测试
+    mark: edge
+    skip: false
+    extract: ""
+    validate:
+      status_code: 200
+      contains: ""
+      json_path: ""
+      json_value: ""
