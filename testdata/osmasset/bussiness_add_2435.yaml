@@ -1,0 +1,15 @@
+#新增业务系统 /businesses
+- casename: 新增业务系统
+  url:
+  headers:
+  timeout: 8
+  params:
+  data:
+  files:
+  json:
+    {
+      "name": "AUTOTEST",
+      "description": "自动化测试业务系统"
+    }
+
+
