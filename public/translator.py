@@ -1,125 +1,148 @@
 # -*- coding:utf-8 -*-
 """
-中文转拼音工具
-用于将中文文件名、类名、方法名转换为英文拼音
+中文转英文工具
+使用 googletrans 将中文翻译成英文
 """
-from pypinyin import lazy_pinyin, Style
 import re
+from googletrans import Translator as GoogleTranslator
+from typing import Optional
 
 
 class Translator:
     """中英文转换器"""
     
-    @staticmethod
-    def to_pinyin(text, style='normal'):
+    def __init__(self):
+        """初始化 Google 翻译器"""
+        self.translator = GoogleTranslator()
+        # 缓存翻译结果，避免重复翻译
+        self._cache = {}
+    
+    def to_english(self, text: str) -> str:
         """
-        中文转拼音（不带声调）
+        中文转英文
         :param text: 中文文本
-        :param style: 转换风格
-            - 'normal': 默认，不带声调
-            - 'camel': 驼峰命名
-            - 'snake': 蛇形命名
-        :return: 转换后的文本
+        :return: 英文文本
         """
         if not text:
             return text
         
-        # 使用拼音转换（不带声调）
-        pinyin_list = lazy_pinyin(text, style=Style.NORMAL)
+        # 检查缓存
+        if text in self._cache:
+            return self._cache[text]
         
-        if style == 'camel':
-            # 驼峰命名
-            return ''.join(word.capitalize() for word in pinyin_list if word)
-        elif style == 'snake':
-            # 蛇形命名
-            return '_'.join(word for word in pinyin_list if word)
-        else:
-            # 默认：直接连接
-            return ''.join(word for word in pinyin_list if word)
+        # 检查是否包含中文
+        if not self._contains_chinese(text):
+            # 不包含中文，直接返回
+            self._cache[text] = text
+            return text
+        
+        try:
+            # 翻译成英文（使用 zh-cn 作为源语言）
+            result = self.translator.translate(text, src='zh-cn', dest='en')
+            translated = result.text
+            self._cache[text] = translated
+            return translated
+        except Exception as e:
+            print(f"翻译失败: {text}, 错误: {e}")
+            # 翻译失败，返回原文
+            return text
     
-    @staticmethod
-    def to_camel_case(text):
-        """转驼峰命名"""
-        # 先转蛇形
-        snake = Translator.to_pinyin(text, style='snake')
-        # 再转驼峰
-        return Translator._snake_to_camel(snake)
+    def _contains_chinese(self, text: str) -> bool:
+        """检查是否包含中文"""
+        return any('\u4e00' <= char <= '\u9fa5' for char in text)
     
-    @staticmethod
-    def to_snake_case(text):
-        """转蛇形命名"""
-        return Translator.to_pinyin(text, style='snake')
-    
-    @staticmethod
-    def to_lower_snake_case(text):
-        """转小写蛇形命名"""
-        return Translator.to_snake_case(text).lower()
-    
-    @staticmethod
-    def _snake_to_camel(name):
-        """蛇形命名转驼峰命名"""
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-    
-    @staticmethod
-    def translate_filename(text):
+    def translate_filename(self, text: str) -> str:
         """
-        翻译文件名
+        翻译文件名（下划线命名）
         :param text: 文件名（中文或英文）
-        :return: 英文文件名
+        :return: 英文文件名（下划线命名）
         """
-        # 移除特殊字符
-        text = re.sub(r'[^\w\u4e00-\u9fa5]', '_', text)
+        if not text:
+            return text
         
-        # 检查是否包含中文
-        if any('\u4e00' <= char <= '\u9fa5' for char in text):
-            # 转为拼音（小写蛇形）
-            return Translator.to_lower_snake_case(text)
-        else:
-            # 已经是英文，转蛇形
-            return Translator._snake_to_camel(text)
+        # 移除特殊字符（保留中文、英文、数字、下划线、连字符）
+        text = re.sub(r'[^\w\u4e00-\u9fa5-]', '_', text)
+        
+        # 翻译成英文
+        english = self.to_english(text)
+        
+        # 转为下划线命名（小写）
+        return self._to_snake_case(english)
     
-    @staticmethod
-    def translate_class_name(text):
+    def translate_class_name(self, text: str) -> str:
         """
-        翻译类名
+        翻译类名（帕斯卡命名）
         :param text: 类名（中文或英文）
-        :return: 英文类名
+        :return: 英文类名（帕斯卡命名）
         """
+        if not text:
+            return text
+        
         # 移除特殊字符
         text = re.sub(r'[^\w\u4e00-\u9fa5]', '_', text)
         
-        # 检查是否包含中文
-        if any('\u4e00' <= char <= '\u9fa5' for char in text):
-            # 转为驼峰命名
-            return Translator.to_camel_case(text)
-        else:
-            # 已经是英文，转驼峰
-            return Translator._to_camel_from_snake(text)
+        # 翻译成英文
+        english = self.to_english(text)
+        
+        # 转为帕斯卡命名
+        return self._to_pascal_case(english)
     
-    @staticmethod
-    def _to_camel_from_snake(name):
-        """蛇形命名转驼峰命名"""
-        words = name.replace('-', '_').replace(' ', '_').split('_')
-        return ''.join(word.capitalize() for word in words if word)
-    
-    @staticmethod
-    def translate_method_name(text):
+    def translate_method_name(self, text: str) -> str:
         """
-        翻译方法名
+        翻译方法名（蛇形命名）
         :param text: 方法名（中文或英文）
         :return: 英文方法名（蛇形命名）
         """
+        if not text:
+            return text
+        
         # 移除特殊字符
         text = re.sub(r'[^\w\u4e00-\u9fa5]', '_', text)
         
-        # 检查是否包含中文
-        if any('\u4e00' <= char <= '\u9fa5' for char in text):
-            # 转为蛇形命名
-            return Translator.to_lower_snake_case(text)
-        else:
-            # 已经是英文，转蛇形
-            return Translator._snake_to_camel(text)
+        # 翻译成英文
+        english = self.to_english(text)
+        
+        # 转为蛇形命名
+        return self._to_snake_case(english)
+    
+    def translate_description(self, text: str) -> str:
+        """
+        翻译接口描述（小写蛇形命名）
+        :param text: 接口描述（中文或英文）
+        :return: 英文描述（小写蛇形命名）
+        """
+        if not text:
+            return text
+        
+        # 翻译成英文
+        english = self.to_english(text)
+        
+        # 转为小写蛇形命名
+        return self._to_snake_case(english)
+    
+    def _to_snake_case(self, text: str) -> str:
+        """转蛇形命名（小写）"""
+        # 替换空格和连字符为下划线
+        text = text.replace('-', '_').replace(' ', '_')
+        
+        # 处理驼峰命名
+        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
+        s2 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1)
+        
+        # 转小写并移除多余下划线
+        result = s2.lower()
+        result = re.sub(r'_+', '_', result)
+        result = result.strip('_')
+        
+        return result
+    
+    def _to_pascal_case(self, text: str) -> str:
+        """转帕斯卡命名"""
+        # 先转蛇形
+        snake = self._to_snake_case(text)
+        # 再转帕斯卡
+        words = snake.split('_')
+        return ''.join(word.capitalize() for word in words if word)
 
 
 if __name__ == '__main__':
@@ -138,3 +161,7 @@ if __name__ == '__main__':
     print("\n=== 方法名翻译 ===")
     print(f"登录 -> {translator.translate_method_name('登录')}")
     print(f"获取用户信息 -> {translator.translate_method_name('获取用户信息')}")
+    
+    print("\n=== 描述翻译 ===")
+    print(f"登录接口 -> {translator.translate_description('登录接口')}")
+    print(f"根据ID获取用户信息 -> {translator.translate_description('根据ID获取用户信息')}")

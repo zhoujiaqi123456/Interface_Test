@@ -3,7 +3,8 @@
 根据update文件夹下的YAML文件生成API模块和测试用例文件
 - 按照update文件夹的层级结构，在apimap下生成department_yml.py
 - 在testosmcase下生成test_department_yml.py
-- 支持中文自动翻译成英文命名
+- 使用googletrans将中文翻译成英文下划线命名
+- 测试用例调用方式：self.api_client.method_name("1")（带参数）
 - 支持参数替换（{{id}}格式）
 """
 import os
@@ -149,42 +150,52 @@ class {class_name_en}(BaseAPI):
             return ""
         
         case_info = test_case[0]
-        info = case_info.get("info", "")
+        info_cn = case_info.get("info", "")
         method = case_info.get("method", "")
         url = case_info.get("url", "")
         
+        # 翻译接口描述
+        info_en = self.translator.translate_description(info_cn) if info_cn else ""
+        
         # 生成方法名：根据yaml文件名
-        method_name = self._generate_method_name(yaml_file, method, url)
+        method_name = self._generate_method_name(yaml_file, method, url, info_en)
         
         # 检查是否有需要替换的参数（{{id}} 格式）
         json_data = case_info.get("json", {})
         params = case_info.get("params", {})
         has_placeholders = self._check_placeholders(json_data) or self._check_placeholders(params)
         
-        # 如果有占位符，添加参数
+        # 如果有占位符，添加参数（支持字符串参数，如 "1"）
         if has_placeholders:
             code = f'''
-    def {method_name}(self, context=None):
+    def {method_name}(self, param=""):
         """
-        {info or yaml_file}
+        {info_cn or yaml_file}
         请求方法: {method}
         请求URL: {url}
         
-        :param context: 要替换的参数，格式: {{"id": 1, "name": "xxx"}}
+        :param param: 参数，可以是字符串如 "1" 或字典如 {{"id": 1}}
         :return: 响应数据
         """
+        # 如果参数是字符串，构建context字典
+        if isinstance(param, str):
+            context = {{"id": param}} if param else {{}}
+        else:
+            context = param
+        
         self.json_data = self.request('{yaml_file}', context=context)
         print(self.verbose(self.json_data))
         return self.json_data
 '''
         else:
             code = f'''
-    def {method_name}(self):
+    def {method_name}(self, param=""):
         """
-        {info or yaml_file}
+        {info_cn or yaml_file}
         请求方法: {method}
         请求URL: {url}
         
+        :param param: 参数（此接口不需要参数，保留接口一致性）
         :return: 响应数据
         """
         self.json_data = self.request('{yaml_file}')
@@ -193,7 +204,7 @@ class {class_name_en}(BaseAPI):
 '''
         return code
 
-    def _generate_method_name(self, yaml_file, method, url):
+    def _generate_method_name(self, yaml_file, method, url, info_en):
         """生成方法名"""
         # 从yaml文件名提取方法名（去掉后缀和_test）
         base_name = yaml_file.replace('.yaml', '').replace('_test', '')
@@ -203,7 +214,7 @@ class {class_name_en}(BaseAPI):
         if parts and parts[-1].isdigit():
             base_name = '_'.join(parts[:-1])
         
-        # 转为蛇形命名
+        # 转为蛇形命名（英文）
         method_name = self.translator.translate_method_name(base_name)
         
         # 添加方法前缀
@@ -330,15 +341,16 @@ class Test{self.translator.translate_class_name(dir_name_cn)}:
         请求方法: {method}
         请求URL: {url}
         
-        注意：此接口需要传递参数，请根据实际情况修改 context 参数
+        注意：此接口需要传递参数
         """
         # 调用API方法，传递参数
-        context = {{"id": 1}}  # 根据实际情况修改参数
-        if hasattr(api_client, '{method_name}'):
-            response = getattr(api_client, '{method_name}')(context=context)
-            assert response is not None, "响应为空"
-        else:
-            pytest.skip(f"方法 {method_name} 不存在")
+        # 方式1：字符串参数（适合单个ID）
+        response = api_client.{method_name}("1")
+        
+        # 方式2：字典参数（适合多个参数）
+        # response = api_client.{method_name}({{"userId": 1, "name": "test"}})
+        
+        assert response is not None, "响应为空"
 '''
         else:
             code = f'''{mark_decorator}
@@ -349,13 +361,13 @@ class Test{self.translator.translate_class_name(dir_name_cn)}:
         {info or f"测试用例 {idx + 1}"}
         请求方法: {method}
         请求URL: {url}
+        
+        注意：此接口不需要参数，保持空字符串即可
         """
-        # 调用API方法
-        if hasattr(api_client, '{method_name}'):
-            response = getattr(api_client, '{method_name}')()
-            assert response is not None, "响应为空"
-        else:
-            pytest.skip(f"方法 {method_name} 不存在")
+        # 调用API方法（不需要参数）
+        response = api_client.{method_name}("")
+        
+        assert response is not None, "响应为空"
 '''
         return code
 
