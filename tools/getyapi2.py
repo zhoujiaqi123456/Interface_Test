@@ -38,7 +38,7 @@ class GetYapi(object):
         self.pathdicts = {}  # 存取单个从 yaml 内抓去的数据
         self.count = 0  # 统计接口总数
         self.filecount = 0  # 统计 yaml 总数
-        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath("."))))
+        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(".")))
         self.yaml_dir = ""  # 写入 yaml 的路径
         self.pathid = ""  # 用于写入总文件内的 ID
         self.total_file = os.path.join(self.root_dir, "yaml", "total_iface_info.yaml")
