@@ -1,30 +1,25 @@
 # -*- coding:utf-8 -*-
 """
 设备控制 模块API
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 """
+from public.base import BaseAPI
+from public.login import Login
 
-from public.request_handler import RequestHandler
 
-
-class 设备控制Api:
+class 设备控制API(BaseAPI):
     """设备控制 接口"""
     
-    def __init__(self, base_url=None, token=None):
+    def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
         初始化
         :param base_url: 基础URL
         :param token: 认证token
+        :param sso_ip: SSO服务器IP
+        :param url_ip: API服务器IP
         """
-        self.request_handler = RequestHandler(base_url, token)
-    
-    def request(self, yaml_file):
-        """
-        发送请求
-        :param yaml_file: YAML文件名
-        :return: 响应数据
-        """
-        return self.request_handler.request(yaml_file)
+        super().__init__(base_url, token)
+        self.login = Login(sso_ip, url_ip) if sso_ip and url_ip else None
     
     def verbose(self, data):
         """
@@ -41,6 +36,8 @@ class 设备控制Api:
         停止测量
         请求方法: POST
         请求URL: /pf-lite/api/device/stopTest
+        
+        :return: 响应数据
         """
         self.json_data = self.request('stopTest28061_test.yaml')
         print(self.verbose(self.json_data))
@@ -52,6 +49,8 @@ class 设备控制Api:
         刷新环境参数
         请求方法: POST
         请求URL: /pf-lite/api/device/refreshEnvParams
+        
+        :return: 响应数据
         """
         self.json_data = self.request('refreshEnvParams28063_test.yaml')
         print(self.verbose(self.json_data))
@@ -63,6 +62,8 @@ class 设备控制Api:
         开始测量
         请求方法: POST
         请求URL: /pf-lite/api/device/startTest
+        
+        :return: 响应数据
         """
         self.json_data = self.request('startTest28060_test.yaml')
         print(self.verbose(self.json_data))
@@ -74,6 +75,8 @@ class 设备控制Api:
         固件升级
         请求方法: POST
         请求URL: /pf-lite/api/device/updateFirmwareParam
+        
+        :return: 响应数据
         """
         self.json_data = self.request('updateFirmwareParam28066_test.yaml')
         print(self.verbose(self.json_data))
@@ -85,6 +88,8 @@ class 设备控制Api:
         泵控制
         请求方法: POST
         请求URL: /pf-lite/api/device/pumpControl
+        
+        :return: 响应数据
         """
         self.json_data = self.request('pumpControl28070_test.yaml')
         print(self.verbose(self.json_data))
@@ -96,6 +101,8 @@ class 设备控制Api:
         获取仪器信息
         请求方法: POST
         请求URL: /pf-lite/api/device/getDevInstrumentInfo
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getDevInstrumentInfo28062_test.yaml')
         print(self.verbose(self.json_data))
@@ -107,6 +114,8 @@ class 设备控制Api:
         获取设备电量
         请求方法: POST
         请求URL: /pf-lite/api/device/getBatteryStatus
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getBatteryStatus28064_test.yaml')
         print(self.verbose(self.json_data))
@@ -118,6 +127,8 @@ class 设备控制Api:
         获取IOS 的 阻抗系统
         请求方法: POST
         请求URL: /pf-lite/api/device/getIOSImpedanceParamsValues
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getIOSImpedanceParamsValues28065_test.yaml')
         print(self.verbose(self.json_data))

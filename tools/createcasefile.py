@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 """
 根据update文件夹下的YAML文件生成API模块和测试用例文件
-- 按照update文件夹的层级结构，在apimap和testosmcase下创建相同的层级
-- 每个目录生成一个API模块文件
-- 每个YAML生成一个测试文件
+- 按照update文件夹的层级结构，在apimap下生成department_yml.py
+- 在testosmcase下生成test_department_yml.py
+- 支持参数替换（{{id}}格式）
 """
 import os
 import yaml
@@ -48,18 +48,18 @@ class CreateCaseFile:
             print(f"\n📦 处理目录: {rel_path}")
             print(f"📋 找到 {len(yaml_files)} 个YAML文件")
             
-            # 创建API模块文件
-            self._create_api_file(rel_path, yaml_files, root_dir)
+            # 创建API模块文件（department_yml.py）
+            self._create_department_api(rel_path, yaml_files, root_dir)
             
-            # 为每个YAML创建测试文件
+            # 为每个YAML创建测试文件（test_department_yml.py）
             for yaml_file in yaml_files:
                 yaml_full_path = os.path.join(root_dir, yaml_file)
                 self._create_test_file(rel_path, yaml_file, yaml_full_path)
         
         print("\n✅ 所有文件生成完成！")
 
-    def _create_api_file(self, rel_path, yaml_files, yaml_dir):
-        """创建API模块文件"""
+    def _create_department_api(self, rel_path, yaml_files, yaml_dir):
+        """创建API模块文件（department_yml.py）"""
         # 创建API目录
         api_dir = os.path.join(self.api_path, rel_path)
         if not os.path.exists(api_dir):
@@ -68,12 +68,14 @@ class CreateCaseFile:
         
         # 获取目录名作为模块名
         dir_name = os.path.basename(rel_path)
-        class_name = self._camel_case(dir_name)
-        module_name = self._snake_case(dir_name)
         
-        # API文件名
-        api_filename = f"{class_name}Api.py"
+        # 生成文件名（英文命名）
+        module_name = self._snake_case(dir_name)
+        api_filename = f"{module_name}_yml.py"
         api_file = os.path.join(api_dir, api_filename)
+        
+        # 生成类名
+        class_name = self._camel_case(dir_name)
         
         # 生成接口方法
         methods = []
@@ -81,7 +83,7 @@ class CreateCaseFile:
             yaml_full_path = os.path.join(yaml_dir, yaml_file)
             yaml_data = self._load_yaml(yaml_full_path)
             if yaml_data:
-                method_code = self._generate_api_method(yaml_data, yaml_file)
+                method_code = self._generate_api_method(yaml_data, yaml_file, class_name)
                 methods.append(method_code)
         
         # 生成API文件内容
@@ -90,28 +92,23 @@ class CreateCaseFile:
 {dir_name} 模块API
 自动生成于 {self._get_timestamp()}
 """
+from public.base import BaseAPI
+from public.login import Login
 
-from public.request_handler import RequestHandler
 
-
-class {class_name}Api:
+class {class_name}API(BaseAPI):
     """{dir_name} 接口"""
     
-    def __init__(self, base_url=None, token=None):
+    def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
         初始化
         :param base_url: 基础URL
         :param token: 认证token
+        :param sso_ip: SSO服务器IP
+        :param url_ip: API服务器IP
         """
-        self.request_handler = RequestHandler(base_url, token)
-    
-    def request(self, yaml_file):
-        """
-        发送请求
-        :param yaml_file: YAML文件名
-        :return: 响应数据
-        """
-        return self.request_handler.request(yaml_file)
+        super().__init__(base_url, token)
+        self.login = Login(sso_ip, url_ip) if sso_ip and url_ip else None
     
     def verbose(self, data):
         """
@@ -131,7 +128,7 @@ class {class_name}Api:
         
         print(f"  ✅ 生成API文件: {api_filename}")
 
-    def _generate_api_method(self, yaml_data, yaml_file):
+    def _generate_api_method(self, yaml_data, yaml_file, class_name):
         """生成API方法代码"""
         testinfo = yaml_data.get("testinfo", {})
         test_case = yaml_data.get("test_case", [])
@@ -140,20 +137,43 @@ class {class_name}Api:
             return ""
         
         case_info = test_case[0]
-        test_name = case_info.get("test_name", "")
         info = case_info.get("info", "")
         method = case_info.get("method", "")
         url = case_info.get("url", "")
         
-        # 生成方法名：根据yaml文件名或者info
-        method_name = self._generate_method_name(yaml_file, info, method, url)
+        # 生成方法名：根据yaml文件名
+        method_name = self._generate_method_name(yaml_file, method, url)
         
-        code = f'''
+        # 检查是否有需要替换的参数（{{id}} 格式）
+        json_data = case_info.get("json", {})
+        params = case_info.get("params", {})
+        has_placeholders = self._check_placeholders(json_data) or self._check_placeholders(params)
+        
+        # 如果有占位符，添加参数
+        if has_placeholders:
+            code = f'''
+    def {method_name}(self, context=None):
+        """
+        {info or yaml_file}
+        请求方法: {method}
+        请求URL: {url}
+        
+        :param context: 要替换的参数，格式: {{"id": 1, "name": "xxx"}}
+        :return: 响应数据
+        """
+        self.json_data = self.request('{yaml_file}', context=context)
+        print(self.verbose(self.json_data))
+        return self.json_data
+'''
+        else:
+            code = f'''
     def {method_name}(self):
         """
         {info or yaml_file}
         请求方法: {method}
         请求URL: {url}
+        
+        :return: 响应数据
         """
         self.json_data = self.request('{yaml_file}')
         print(self.verbose(self.json_data))
@@ -161,10 +181,15 @@ class {class_name}Api:
 '''
         return code
 
-    def _generate_method_name(self, yaml_file, info, method, url):
+    def _generate_method_name(self, yaml_file, method, url):
         """生成方法名"""
-        # 优先使用yaml文件名（去掉后缀）
+        # 从yaml文件名提取方法名（去掉后缀和_test）
         base_name = yaml_file.replace('.yaml', '').replace('_test', '')
+        
+        # 提取ID部分（最后一个数字段）
+        parts = base_name.split('_')
+        if parts and parts[-1].isdigit():
+            base_name = '_'.join(parts[:-1])
         
         # 转为蛇形命名
         method_name = self._snake_case(base_name)
@@ -175,8 +200,24 @@ class {class_name}Api:
         
         return method_name
 
+    def _check_placeholders(self, data):
+        """检查是否有占位符（{{key}}格式）"""
+        if isinstance(data, dict):
+            for v in data.values():
+                if isinstance(v, str) and '{{' in v and '}}' in v:
+                    return True
+                elif isinstance(v, (dict, list)):
+                    if self._check_placeholders(v):
+                        return True
+        elif isinstance(data, list):
+            for item in data:
+                if isinstance(item, (dict, list)):
+                    if self._check_placeholders(item):
+                        return True
+        return False
+
     def _create_test_file(self, rel_path, yaml_file, yaml_full_path):
-        """创建测试用例文件"""
+        """创建测试用例文件（test_department_yml.py）"""
         yaml_data = self._load_yaml(yaml_full_path)
         if not yaml_data:
             return
@@ -195,21 +236,27 @@ class {class_name}Api:
             os.makedirs(test_dir)
             print(f"  📁 创建测试目录: test_{rel_path}")
         
-        # 生成测试文件名（去掉.yaml，加上.py）
+        # 生成测试文件名
         test_filename = yaml_file.replace('.yaml', '.py')
         test_file = os.path.join(test_dir, test_filename)
         
         # 导入API类
-        api_import = f"apimap.{rel_path.replace(os.sep, '.')}.{class_name}Api"
-        api_class = f"{class_name}Api"
+        api_import = f"apimap.{rel_path.replace(os.sep, '.')}.{module_name}_yml"
+        api_class = f"{class_name}API"
         
         # 获取方法名
         method_name = self._generate_method_name_from_yaml(yaml_file, test_case)
         
+        # 检查是否有占位符
+        case_info = test_case[0] if test_case else {}
+        json_data = case_info.get("json", {})
+        params = case_info.get("params", {})
+        has_placeholders = self._check_placeholders(json_data) or self._check_placeholders(params)
+        
         # 生成测试用例
         test_methods = []
         for idx, case in enumerate(test_case):
-            test_method = self._generate_test_method(case, idx, testinfo, method_name)
+            test_method = self._generate_test_method(case, idx, testinfo, method_name, has_placeholders)
             test_methods.append(test_method)
         
         # 生成测试文件内容
@@ -243,7 +290,7 @@ class Test{class_name}:
         
         print(f"  ✅ 生成测试文件: test_{test_filename}")
 
-    def _generate_test_method(self, test_case, idx, testinfo, method_name):
+    def _generate_test_method(self, test_case, idx, testinfo, method_name, has_placeholders):
         """生成测试方法代码"""
         test_name = test_case.get("test_name", f"case_{idx}")
         info = test_case.get("info", "")
@@ -258,7 +305,28 @@ class Test{class_name}:
         skip_decorator = f'    @pytest.mark.skip(reason="跳过测试")' if not test_case.get("test_name") else ''
         mark_decorator = f'    @pytest.mark.{mark}' if mark else ''
         
-        code = f'''{mark_decorator}
+        if has_placeholders:
+            code = f'''{mark_decorator}
+{skip_decorator}
+    @allure.story("{info or method} {url}")
+    def {test_method_name}(self, api_client):
+        """
+        {info or f"测试用例 {idx + 1}"}
+        请求方法: {method}
+        请求URL: {url}
+        
+        注意：此接口需要传递参数，请根据实际情况修改 context 参数
+        """
+        # 调用API方法，传递参数
+        context = {{"id": 1}}  # 根据实际情况修改参数
+        if hasattr(api_client, '{method_name}'):
+            response = getattr(api_client, '{method_name}')(context=context)
+            assert response is not None, "响应为空"
+        else:
+            pytest.skip(f"方法 {method_name} 不存在")
+'''
+        else:
+            code = f'''{mark_decorator}
 {skip_decorator}
     @allure.story("{info or method} {url}")
     def {test_method_name}(self, api_client):
@@ -278,7 +346,13 @@ class Test{class_name}:
 
     def _generate_method_name_from_yaml(self, yaml_file, test_case):
         """根据YAML文件名生成方法名"""
+        # 从yaml文件名提取方法名（去掉后缀和_test）
         base_name = yaml_file.replace('.yaml', '').replace('_test', '')
+        
+        # 提取ID部分（最后一个数字段）
+        parts = base_name.split('_')
+        if parts and parts[-1].isdigit():
+            base_name = '_'.join(parts[:-1])
         
         # 获取方法类型
         method = 'GET'
@@ -299,7 +373,6 @@ class Test{class_name}:
 
     def _camel_case(self, name):
         """转驼峰命名"""
-        # 先转成单词首字母大写
         words = name.replace('-', '_').replace(' ', '_').split('_')
         return ''.join(word.capitalize() for word in words if word)
 

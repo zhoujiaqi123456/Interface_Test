@@ -1,30 +1,25 @@
 # -*- coding:utf-8 -*-
 """
 导出 模块API
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 """
+from public.base import BaseAPI
+from public.login import Login
 
-from public.request_handler import RequestHandler
 
-
-class 导出Api:
+class 导出API(BaseAPI):
     """导出 接口"""
     
-    def __init__(self, base_url=None, token=None):
+    def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
         初始化
         :param base_url: 基础URL
         :param token: 认证token
+        :param sso_ip: SSO服务器IP
+        :param url_ip: API服务器IP
         """
-        self.request_handler = RequestHandler(base_url, token)
-    
-    def request(self, yaml_file):
-        """
-        发送请求
-        :param yaml_file: YAML文件名
-        :return: 响应数据
-        """
-        return self.request_handler.request(yaml_file)
+        super().__init__(base_url, token)
+        self.login = Login(sso_ip, url_ip) if sso_ip and url_ip else None
     
     def verbose(self, data):
         """
@@ -41,6 +36,8 @@ class 导出Api:
         取消导出
         请求方法: POST
         请求URL: /pf-lite/api/export/cancel
+        
+        :return: 响应数据
         """
         self.json_data = self.request('cancel28121_test.yaml')
         print(self.verbose(self.json_data))
@@ -52,6 +49,8 @@ class 导出Api:
         开始导出
         请求方法: POST
         请求URL: /pf-lite/api/export/export
+        
+        :return: 响应数据
         """
         self.json_data = self.request('export28120_test.yaml')
         print(self.verbose(self.json_data))

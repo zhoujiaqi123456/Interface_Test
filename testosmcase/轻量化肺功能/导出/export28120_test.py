@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 """
 导出 测试用例
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 YAML文件: export28120_test.yaml
 """
 
 import pytest
 import allure
-from apimap.轻量化肺功能.导出.导出Api import 导出Api
+from apimap.轻量化肺功能.导出.导出_yml import 导出API
 
 
 @allure.feature("导出")
@@ -17,7 +17,7 @@ class Test导出:
     @pytest.fixture(scope="class")
     def api_client(self):
         """API客户端"""
-        return 导出Api()
+        return 导出API()
     
 
     @pytest.mark.skip(reason="跳过测试")

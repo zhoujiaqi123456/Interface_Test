@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 """
 设备控制 测试用例
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 YAML文件: refreshEnvParams28063_test.yaml
 """
 
 import pytest
 import allure
-from apimap.轻量化肺功能.设备控制.设备控制Api import 设备控制Api
+from apimap.轻量化肺功能.设备控制.设备控制_yml import 设备控制API
 
 
 @allure.feature("设备控制")
@@ -17,7 +17,7 @@ class Test设备控制:
     @pytest.fixture(scope="class")
     def api_client(self):
         """API客户端"""
-        return 设备控制Api()
+        return 设备控制API()
     
 
     @pytest.mark.skip(reason="跳过测试")

@@ -1,30 +1,25 @@
 # -*- coding:utf-8 -*-
 """
 设置 模块API
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 """
+from public.base import BaseAPI
+from public.login import Login
 
-from public.request_handler import RequestHandler
 
-
-class 设置Api:
+class 设置API(BaseAPI):
     """设置 接口"""
     
-    def __init__(self, base_url=None, token=None):
+    def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
         初始化
         :param base_url: 基础URL
         :param token: 认证token
+        :param sso_ip: SSO服务器IP
+        :param url_ip: API服务器IP
         """
-        self.request_handler = RequestHandler(base_url, token)
-    
-    def request(self, yaml_file):
-        """
-        发送请求
-        :param yaml_file: YAML文件名
-        :return: 响应数据
-        """
-        return self.request_handler.request(yaml_file)
+        super().__init__(base_url, token)
+        self.login = Login(sso_ip, url_ip) if sso_ip and url_ip else None
     
     def verbose(self, data):
         """
@@ -41,6 +36,8 @@ class 设置Api:
         *
         请求方法: POST
         请求URL: /pf-lite/api/settings/getConnectDeviceTypeList
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getConnectDeviceTypeList28228_test.yaml')
         print(self.verbose(self.json_data))
@@ -52,6 +49,8 @@ class 设置Api:
         获取定标桶容积
         请求方法: POST
         请求URL: /pf-lite/api/settings/getCalibrationVol
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getCalibrationVol28085_test.yaml')
         print(self.verbose(self.json_data))
@@ -63,6 +62,8 @@ class 设置Api:
         获取当前的和前一次的环境参数
         请求方法: POST
         请求URL: /pf-lite/api/settings/getSavedEnvParams
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getSavedEnvParams28084_test.yaml')
         print(self.verbose(self.json_data))
@@ -74,6 +75,8 @@ class 设置Api:
         获取报告标题设置
         请求方法: POST
         请求URL: /pf-lite/api/settings/getReportTitleSettings
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getReportTitleSettings28071_test.yaml')
         print(self.verbose(self.json_data))
@@ -85,6 +88,8 @@ class 设置Api:
         获取通用配置
         请求方法: POST
         请求URL: /pf-lite/api/settings/getCommonSetting
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getCommonSetting28082_test.yaml')
         print(self.verbose(self.json_data))
@@ -96,6 +101,8 @@ class 设置Api:
         设置预计值算法，一次性可以传多个模板设置
         请求方法: POST
         请求URL: /pf-lite/api/settings/setPredAlgorithmList
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setPredAlgorithmList28077_test.yaml')
         print(self.verbose(self.json_data))
@@ -107,6 +114,8 @@ class 设置Api:
         设置阻抗校准参考值
         请求方法: POST
         请求URL: /pf-lite/api/settings/setIOSVerifyStandardParam
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setIOSVerifyStandardParam28090_test.yaml')
         print(self.verbose(self.json_data))
@@ -118,6 +127,8 @@ class 设置Api:
         文案是否不再提醒
         请求方法: POST
         请求URL: /pf-lite/api/settings/getCopywriterConfigRemind
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getCopywriterConfigRemind28093_test.yaml')
         print(self.verbose(self.json_data))
@@ -129,6 +140,8 @@ class 设置Api:
         设置预计值算法
         请求方法: POST
         请求URL: /pf-lite/api/settings/setPredAlgorithm
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setPredAlgorithm28074_test.yaml')
         print(self.verbose(self.json_data))
@@ -140,6 +153,8 @@ class 设置Api:
         保存环境参数
         请求方法: POST
         请求URL: /pf-lite/api/settings/saveEnvParams
+        
+        :return: 响应数据
         """
         self.json_data = self.request('saveEnvParams28083_test.yaml')
         print(self.verbose(self.json_data))
@@ -151,6 +166,8 @@ class 设置Api:
         设置二维码文案
         请求方法: POST
         请求URL: /pf-lite/api/settings/setQrcodeRemark
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setQrcodeRemark28080_test.yaml')
         print(self.verbose(self.json_data))
@@ -162,6 +179,8 @@ class 设置Api:
         获取预计值算法
         请求方法: POST
         请求URL: /pf-lite/api/settings/getPredAlgorithm
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getPredAlgorithm28075_test.yaml')
         print(self.verbose(self.json_data))
@@ -173,6 +192,8 @@ class 设置Api:
         获取定标桶容积
         请求方法: POST
         请求URL: /pf-lite/api/settings/setCalibrationVol
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setCalibrationVol28086_test.yaml')
         print(self.verbose(self.json_data))
@@ -184,6 +205,8 @@ class 设置Api:
         获取报告默认标题
         请求方法: POST
         请求URL: /pf-lite/api/settings/getDefaultReportTitleSettings
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getDefaultReportTitleSettings28073_test.yaml')
         print(self.verbose(self.json_data))
@@ -195,6 +218,8 @@ class 设置Api:
         获取二维码信息
         请求方法: POST
         请求URL: /pf-lite/api/settings/getQrcode
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getQrcode28079_test.yaml')
         print(self.verbose(self.json_data))
@@ -206,6 +231,8 @@ class 设置Api:
         设置通用配置
         请求方法: POST
         请求URL: /pf-lite/api/settings/setCommonSetting
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setCommonSetting28081_test.yaml')
         print(self.verbose(self.json_data))
@@ -217,6 +244,8 @@ class 设置Api:
         获取上次更新时间
         请求方法: POST
         请求URL: /pf-lite/api/settings/getLastUpdateTime
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getLastUpdateTime28094_test.yaml')
         print(self.verbose(self.json_data))
@@ -228,6 +257,8 @@ class 设置Api:
         获取CO2标定浓度
         请求方法: POST
         请求URL: /pf-lite/api/settings/getCo2StandardValue
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getCo2StandardValue28088_test.yaml')
         print(self.verbose(self.json_data))
@@ -239,6 +270,8 @@ class 设置Api:
         更新报告标题设置
         请求方法: POST
         请求URL: /pf-lite/api/settings/updateReportTitleSettings
+        
+        :return: 响应数据
         """
         self.json_data = self.request('updateReportTitleSettings28072_test.yaml')
         print(self.verbose(self.json_data))
@@ -250,6 +283,8 @@ class 设置Api:
         获取预计值算法枚举列表
         请求方法: POST
         请求URL: /pf-lite/api/settings/getPredAlgorithmSettingList
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getPredAlgorithmSettingList28076_test.yaml')
         print(self.verbose(self.json_data))
@@ -261,6 +296,8 @@ class 设置Api:
         设置文案不再提醒
         请求方法: POST
         请求URL: /pf-lite/api/settings/setCopywriterConfigRemind
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setCopywriterConfigRemind28092_test.yaml')
         print(self.verbose(self.json_data))
@@ -272,6 +309,8 @@ class 设置Api:
         获取预计值算法，一次性可以传多个模板设置
         请求方法: POST
         请求URL: /pf-lite/api/settings/getPredAlgorithmList
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getPredAlgorithmList28078_test.yaml')
         print(self.verbose(self.json_data))
@@ -283,6 +322,8 @@ class 设置Api:
         获取阻抗校准参考值
         请求方法: POST
         请求URL: /pf-lite/api/settings/getIOSVerifyStandardParam
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getIOSVerifyStandardParam28089_test.yaml')
         print(self.verbose(self.json_data))
@@ -294,6 +335,8 @@ class 设置Api:
         设置CO2标定浓度
         请求方法: POST
         请求URL: /pf-lite/api/settings/setCo2StandardValue
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setCo2StandardValue28087_test.yaml')
         print(self.verbose(self.json_data))
@@ -305,6 +348,8 @@ class 设置Api:
         获取文案配置
         请求方法: POST
         请求URL: /pf-lite/api/settings/getCopywriterConfig
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getCopywriterConfig28091_test.yaml')
         print(self.verbose(self.json_data))

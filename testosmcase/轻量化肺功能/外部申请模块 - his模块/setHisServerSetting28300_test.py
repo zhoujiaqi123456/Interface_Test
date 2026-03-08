@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 """
 外部申请模块 - his模块 测试用例
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 YAML文件: setHisServerSetting28300_test.yaml
 """
 
 import pytest
 import allure
-from apimap.轻量化肺功能.外部申请模块 - his模块.外部申请模块His模块Api import 外部申请模块His模块Api
+from apimap.轻量化肺功能.外部申请模块 - his模块.外部申请模块 - his模块_yml import 外部申请模块His模块API
 
 
 @allure.feature("外部申请模块 - his模块")
@@ -17,7 +17,7 @@ class Test外部申请模块His模块:
     @pytest.fixture(scope="class")
     def api_client(self):
         """API客户端"""
-        return 外部申请模块His模块Api()
+        return 外部申请模块His模块API()
     
 
     @pytest.mark.skip(reason="跳过测试")

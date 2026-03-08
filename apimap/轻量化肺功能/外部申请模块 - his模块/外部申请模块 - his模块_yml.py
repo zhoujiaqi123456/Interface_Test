@@ -1,30 +1,25 @@
 # -*- coding:utf-8 -*-
 """
 外部申请模块 - his模块 模块API
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 """
+from public.base import BaseAPI
+from public.login import Login
 
-from public.request_handler import RequestHandler
 
-
-class 外部申请模块His模块Api:
+class 外部申请模块His模块API(BaseAPI):
     """外部申请模块 - his模块 接口"""
     
-    def __init__(self, base_url=None, token=None):
+    def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
         初始化
         :param base_url: 基础URL
         :param token: 认证token
+        :param sso_ip: SSO服务器IP
+        :param url_ip: API服务器IP
         """
-        self.request_handler = RequestHandler(base_url, token)
-    
-    def request(self, yaml_file):
-        """
-        发送请求
-        :param yaml_file: YAML文件名
-        :return: 响应数据
-        """
-        return self.request_handler.request(yaml_file)
+        super().__init__(base_url, token)
+        self.login = Login(sso_ip, url_ip) if sso_ip and url_ip else None
     
     def verbose(self, data):
         """
@@ -41,6 +36,8 @@ class 外部申请模块His模块Api:
         保存his设置
         请求方法: POST
         请求URL: /pf-lite/api/outApply/setHisServerSetting
+        
+        :return: 响应数据
         """
         self.json_data = self.request('setHisServerSetting28300_test.yaml')
         print(self.verbose(self.json_data))
@@ -52,6 +49,8 @@ class 外部申请模块His模块Api:
         检查单申请 - 选择检查单
         请求方法: POST
         请求URL: /pf-lite/api/outApply/outApplySheetSelect
+        
+        :return: 响应数据
         """
         self.json_data = self.request('outApplySheetSelect28309_test.yaml')
         print(self.verbose(self.json_data))
@@ -63,6 +62,8 @@ class 外部申请模块His模块Api:
         获取请求日志
         请求方法: GET
         请求URL: /pf-lite/api/outApply/getLogList
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getLogList28304_test.yaml')
         print(self.verbose(self.json_data))
@@ -74,6 +75,8 @@ class 外部申请模块His模块Api:
         患者申请 - 选择患者
         请求方法: POST
         请求URL: /pf-lite/api/outApply/outApplyPatientSelect
+        
+        :return: 响应数据
         """
         self.json_data = self.request('outApplyPatientSelect28308_test.yaml')
         print(self.verbose(self.json_data))
@@ -85,6 +88,8 @@ class 外部申请模块His模块Api:
         获取his设置
         请求方法: GET
         请求URL: /pf-lite/api/outApply/getHisServerSetting
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getHisServerSetting28299_test.yaml')
         print(self.verbose(self.json_data))
@@ -96,6 +101,8 @@ class 外部申请模块His模块Api:
         刷新配置
         请求方法: GET
         请求URL: /pf-lite/api/outApply/refreshConfig
+        
+        :return: 响应数据
         """
         self.json_data = self.request('refreshConfig28302_test.yaml')
         print(self.verbose(self.json_data))
@@ -107,6 +114,8 @@ class 外部申请模块His模块Api:
         获取患者申请列表
         请求方法: POST
         请求URL: /pf-lite/api/outApply/getAgentApplyPatientPage
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getAgentApplyPatientPage28305_test.yaml')
         print(self.verbose(self.json_data))
@@ -118,6 +127,8 @@ class 外部申请模块His模块Api:
         获取申请检查单列表
         请求方法: POST
         请求URL: /pf-lite/api/outApply/getAgentApplySheetListPage
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getAgentApplySheetListPage28306_test.yaml')
         print(self.verbose(self.json_data))
@@ -129,6 +140,8 @@ class 外部申请模块His模块Api:
         获取申请检查单列表
         请求方法: POST
         请求URL: /pf-lite/api/outApply/getAgentApplySheetPage
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getAgentApplySheetPage28307_test.yaml')
         print(self.verbose(self.json_data))
@@ -140,6 +153,8 @@ class 外部申请模块His模块Api:
         测试服务
         请求方法: GET
         请求URL: /pf-lite/api/outApply/testServer
+        
+        :return: 响应数据
         """
         self.json_data = self.request('testServer28301_test.yaml')
         print(self.verbose(self.json_data))
@@ -151,6 +166,8 @@ class 外部申请模块His模块Api:
         获取配置1
         请求方法: GET
         请求URL: /pf-lite/api/outApply/getConfig
+        
+        :return: 响应数据
         """
         self.json_data = self.request('getConfig28303_test.yaml')
         print(self.verbose(self.json_data))
