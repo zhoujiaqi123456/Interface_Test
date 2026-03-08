@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 """
-根据update文件夹下的YAML文件生成API模块和测试用例文件
-- 按照update文件夹的层级结构，在apimap下生成department_yml.py
-- 在testosmcase下生成test_department_yml.py
+根据yaml文件夹下的YAML文件生成API模块和测试用例文件
+- 按照yaml文件夹的层级结构，在apimap下生成department_yml.py
+- 在testcase下生成test_department_yml.py
 - 使用googletrans将中文翻译成英文下划线命名
 - 测试用例调用方式：self.api_client.method_name("1")（带参数）
 - 支持参数替换（{{id}}格式）
@@ -13,40 +13,39 @@ import yaml
 from typing import Dict, List, Any
 
 # 添加项目根目录到路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from public.translator import Translator
 
 
 class CreateCaseFile:
     """创建API模块和测试用例文件"""
 
-    def __init__(self, update_path=None, api_path=None, test_path=None):
+    def __init__(self, yaml_path=None, api_path=None, test_path=None):
         """
         初始化
-        :param update_path: update文件夹路径，默认：./update
+        :param yaml_path: yaml文件夹路径，默认：./yaml
         :param api_path: API模块路径，默认：./apimap
-        :param test_path: 测试用例路径，默认：./testosmcase
+        :param test_path: 测试用例路径，默认：./testcase
         """
         self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.update_path = update_path or os.path.join(self.root_dir, "update")
+        self.yaml_path = yaml_path or os.path.join(self.root_dir, "yaml")
         self.api_path = api_path or os.path.join(self.root_dir, "apimap")
-        self.test_path = test_path or os.path.join(self.root_dir, "testosmcase")
+        self.test_path = test_path or os.path.join(self.root_dir, "testcase")
         self.translator = Translator()
 
     def create_all(self):
         """生成所有API和测试文件"""
-        print(f"📁 Update路径: {self.update_path}")
+        print(f"📁 YAML路径: {self.yaml_path}")
         print(f"📁 API路径: {self.api_path}")
         print(f"📁 测试路径: {self.test_path}")
         
-        # 遍历update文件夹的所有子目录
-        for root_dir, dirs, files in os.walk(self.update_path):
-            if root_dir == self.update_path:
+        # 遍历yaml文件夹的所有子目录
+        for root_dir, dirs, files in os.walk(self.yaml_path):
+            if root_dir == self.yaml_path:
                 continue
             
             # 获取相对路径（中文）
-            rel_path_cn = os.path.relpath(root_dir, self.update_path)
+            rel_path_cn = os.path.relpath(root_dir, self.yaml_path)
             
             # 获取该目录下的YAML文件
             yaml_files = [f for f in files if f.endswith('.yaml')]

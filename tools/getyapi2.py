@@ -1,20 +1,30 @@
 # -*- coding:utf-8 -*-
-'''
-
-'''
+"""
+从 YAPI 爬取接口信息并生成 YAML 文件
+使用 googletrans 将中文翻译成英文下划线命名
+"""
 import requests
-
 import time
 import os
+import sys
 from ruamel.yaml import YAML
 import json
 import logging
+
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from public.translator import Translator
 
 
 class GetYapi(object):
 
     def __init__(self, userapi, passwdapi, group_id):
-
+        """
+        初始化
+        :param userapi: YAPI 用户邮箱
+        :param passwdapi: YAPI 密码
+        :param group_id: YAPI 项目组 ID
+        """
         # 初始化日志
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
         self.logs = logging.getLogger(__name__)
@@ -28,13 +38,15 @@ class GetYapi(object):
         self.pathdicts = {}  # 存取单个从 yaml 内抓去的数据
         self.count = 0  # 统计接口总数
         self.filecount = 0  # 统计 yaml 总数
-        self.root_dir = os.path.dirname(os.path.abspath("."))
+        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(".")))
         self.yaml_dir = ""  # 写入 yaml 的路径
         self.pathid = ""  # 用于写入总文件内的 ID
-        self.total_file = os.path.join(self.root_dir, "total_iface_info.yaml")
+        self.total_file = os.path.join(self.root_dir, "yaml", "total_iface_info.yaml")
         self.id_list = set()
         self.total_data = {}  # 存总的接口数据
         self.project_id = None  # 项目 ID
+        self.translator = Translator()  # 翻译器
+        
         # 读取总接口信息文件，用于判断新增接口
         yml = YAML(typ='rt')
         yml.preserve_quotes = True
@@ -50,6 +62,7 @@ class GetYapi(object):
         self.logs.info("登录 yapi 结果：{}".format(res.json().get("errmsg")))
 
     def create_yaml_by_yapi(self):
+        """创建 yaml 文件"""
         self.__get_project_id()
 
     def __get_project_id(self):
@@ -64,15 +77,15 @@ class GetYapi(object):
         # 获取模块列表
         ids = res.json().get("data").get("list")
         for i in range(len(ids)):
-            self.pathmodlename = ids[i].get("name")
-            if self.pathmodlename == "轻量化肺功能":
+            self.pathmodulename = ids[i].get("name")
+            if self.pathmodulename == "轻量化肺功能":
                 self.project_id = ids[i].get("_id")
                 self.basepath = ids[i].get("basepath")  # 获取基地址，用于路径拼接
                 self.logs.info("找到模块【{}】, project_id={}, basepath={}".format(
-                    self.pathmodlename, self.project_id, self.basepath))
+                    self.pathmodulename, self.project_id, self.basepath))
                 
                 # 创建根目录
-                yaml_path = os.path.join(self.root_dir, "update", self.pathmodlename)
+                yaml_path = os.path.join(self.root_dir, "yaml", self.pathmodulename)
                 if os.path.exists(yaml_path) is False:
                     os.makedirs(yaml_path)
                 
@@ -100,13 +113,13 @@ class GetYapi(object):
                 cat_name = category.get("name")
                 interface_list = category.get("list", [])
                 
-                # 特殊处理名称中包含 / 的情况，替换为 -
-                safe_cat_name = cat_name.replace('/', '-')
+                # 翻译分类名称
+                cat_name_en = self.translator.translate_filename(cat_name)
                 
                 self.logs.info("处理分类【{}】(ID: {}), 包含 {} 个接口".format(cat_name, cat_id, len(interface_list)))
                 
-                # 创建分类文件夹
-                category_dir = os.path.join(yaml_path, safe_cat_name)
+                # 创建分类文件夹（使用英文命名）
+                category_dir = os.path.join(yaml_path, cat_name_en)
                 if not os.path.exists(category_dir):
                     os.makedirs(category_dir)
                     self.logs.info("创建分类文件夹：{}".format(category_dir))
@@ -136,16 +149,20 @@ class GetYapi(object):
             self.logs.error("接口 ID {} 获取数据失败".format(pathid))
             return
         
-        data_dict["modle_name"] = self.pathmodlename  # 接口所属模块名称
+        data_dict["module_name"] = self.pathmodulename  # 接口所属模块名称
         
-        # 拼接 case_suite
+        # 接口 case_suite（使用英文命名）
         name = pathdata.get("query_path").get("path").split('/')
-        case_suite = name[-1].lstrip(':') + str(pathid) + "_" + "test"
+        base_name = name[-1].lstrip(':')
+        
+        # 翻译接口名称
+        base_name_en = self.translator.translate_method_name(base_name)
+        case_suite = base_name_en + str(pathid) + "_test"
         
         # 处理要写入 yaml 的数据
         data_dict["case_suite"] = case_suite  # yaml 文件名
-        data_dict["descrption"] = pathdata.get("title")  # 接口名称
-        data_dict["module_class"] = "Test" + str(pathid)  # 接口名称 case_suite.replace("_",'')+
+        data_dict["description"] = pathdata.get("title")  # 接口名称（中文）
+        data_dict["module_class"] = "Test" + str(pathid)  # 接口名称
         data_dict["url"] = self.basepath + pathdata.get("path")  # 接口地址
         data_dict["method"] = pathdata.get("method")  # 接口请求方法
         
@@ -161,14 +178,23 @@ class GetYapi(object):
         params_data = {}
         if pathdata.get("req_query"):
             for requestdata in pathdata.get("req_query"):
-                params_data[requestdata.get("name")] = ""
+                # 如果是必填参数，使用 {{param}} 格式
+                param_name = requestdata.get("name")
+                if requestdata.get("required") == "1":
+                    params_data[param_name] = f'{{{{{param_name}}}}}'
+                else:
+                    params_data[param_name] = ""
         data_dict['params'] = params_data
         
         # 处理 form 表单数据 (req_body_form)
         form_data = {}
         if pathdata.get("req_body_form"):
             for form_item in pathdata.get("req_body_form"):
-                form_data[form_item.get("name")] = ""
+                param_name = form_item.get("name")
+                if form_item.get("required") == "1":
+                    form_data[param_name] = f'{{{{{param_name}}}}}'
+                else:
+                    form_data[param_name] = ""
         data_dict['data'] = form_data if form_data else ""
         
         # 处理 JSON 数据 (优先处理 req_body_other 和 req_body_is_json_schema)
@@ -181,11 +207,19 @@ class GetYapi(object):
                 # 如果是 JSON Schema 格式，解析 properties
                 if json_data.get("properties"):
                     for k, v in json_data.get("properties").items():
-                        key_value_dict[k] = ""
+                        # 检查是否必填
+                        is_required = False
+                        if "required" in json_data:
+                            is_required = k in json_data.get("required", [])
+                        
+                        if is_required:
+                            key_value_dict[k] = f'{{{{{k}}}}}'
+                        else:
+                            key_value_dict[k] = ""
                 # 如果是普通 JSON 对象
                 elif isinstance(json_data, dict):
                     for k in json_data.keys():
-                        key_value_dict[k] = ""
+                        key_value_dict[k] = f'{{{{{k}}}}}'
             except json.JSONDecodeError:
                 self.logs.warning("JSON 解析失败：{}".format(pathdata.get("req_body_other")))
         
@@ -209,14 +243,14 @@ class GetYapi(object):
             self.__create_total_file()
             # 创建 yaml 用例文件
             self.__create_yaml_file()
-
+        
         self.count += 1
-        self.logs.info(("第{}个接口{}的数据已经抓取完毕").format(self.count, data_dict["url"]))
+        self.logs.info(("第{}个接口{}的数据已经爬取完毕").format(self.count, data_dict["url"]))
 
     def __create_total_file(self):
-        """创建总接口信息文件，用于过滤已经成生过文件的接口"""
+        """创建总接口信息文件，用于过滤已经生成过文件的接口"""
         self.total_data = {}
-        self.total_data[self.pathid] = self.pathdicts.get("descrption")
+        self.total_data[self.pathid] = self.pathdicts.get("description")
         yml = YAML(typ='rt')
         yml.preserve_quotes = True
         with open(self.total_file, 'a', encoding='utf-8') as s:
@@ -228,7 +262,7 @@ class GetYapi(object):
         yaml_data = {}  # 整个文档
         testinfo = {}  # 存入 test_info
         testinfo["case_suite"] = self.pathdicts.get("case_suite")
-        testinfo["descrpiton"] = self.pathdicts.get("descrption")
+        testinfo["description"] = self.pathdicts.get("description")
         testinfo["module_class"] = self.pathdicts.get("module_class")
         yaml_data["testinfo"] = testinfo
 
@@ -239,7 +273,7 @@ class GetYapi(object):
         case_list = []
         case_data = {}
         case_data["test_name"] = ""
-        case_data["info"] = self.pathdicts.get("descrption")
+        case_data["info"] = self.pathdicts.get("description")
         case_data["mark"] = ""
         case_data["method"] = self.pathdicts.get("method")
         case_data["url"] = self.pathdicts.get("url")
