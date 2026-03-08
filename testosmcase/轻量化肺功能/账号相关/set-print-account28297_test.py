@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 """
 账号相关 测试用例
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 YAML文件: set-print-account28297_test.yaml
 """
 
 import pytest
 import allure
-from apimap.轻量化肺功能.账号相关.账号相关Api import 账号相关Api
+from apimap.轻量化肺功能.账号相关.账号相关_yml import 账号相关API
 
 
 @allure.feature("账号相关")
@@ -17,7 +17,7 @@ class Test账号相关:
     @pytest.fixture(scope="class")
     def api_client(self):
         """API客户端"""
-        return 账号相关Api()
+        return 账号相关API()
     
 
     @pytest.mark.skip(reason="跳过测试")

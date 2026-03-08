@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
 """
 设置 测试用例
-自动生成于 2026-03-08 10:10:14
+自动生成于 2026-03-08 16:15:15
 YAML文件: setPredAlgorithm28074_test.yaml
 """
 
 import pytest
 import allure
-from apimap.轻量化肺功能.设置.设置Api import 设置Api
+from apimap.轻量化肺功能.设置.设置_yml import 设置API
 
 
 @allure.feature("设置")
@@ -17,7 +17,7 @@ class Test设置:
     @pytest.fixture(scope="class")
     def api_client(self):
         """API客户端"""
-        return 设置Api()
+        return 设置API()
     
 
     @pytest.mark.skip(reason="跳过测试")
