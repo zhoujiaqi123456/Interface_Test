@@ -1,0 +1,26 @@
+testinfo:
+  case_suite: getPredAlgorithm28075_test
+  descrpiton: 获取预计值算法
+  module_class: Test28075
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取预计值算法
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getPredAlgorithm
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    itemType: ''
+    algorithm: ''
+  status: ''
+  extract: ''
+  expects: ''

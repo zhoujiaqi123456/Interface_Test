@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: backToHome28295_test
+  descrpiton: 返回到首页
+  module_class: Test28295
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 返回到首页
+  mark: ''
+  method: POST
+  url: /pf-lite/api/account/backToHome
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    firstInit: ''
+  status: ''
+  extract: ''
+  expects: ''

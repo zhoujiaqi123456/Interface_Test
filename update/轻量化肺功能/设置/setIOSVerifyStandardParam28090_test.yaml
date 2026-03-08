@@ -1,0 +1,27 @@
+testinfo:
+  case_suite: setIOSVerifyStandardParam28090_test
+  descrpiton: 设置阻抗校准参考值
+  module_class: Test28090
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置阻抗校准参考值
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/setIOSVerifyStandardParam
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    low: ''
+    mid: ''
+    high: ''
+  status: ''
+  extract: ''
+  expects: ''

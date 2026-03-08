@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getDevInstrumentInfo28062_test
+  descrpiton: 获取仪器信息
+  module_class: Test28062
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取仪器信息
+  mark: ''
+  method: POST
+  url: /pf-lite/api/device/getDevInstrumentInfo
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

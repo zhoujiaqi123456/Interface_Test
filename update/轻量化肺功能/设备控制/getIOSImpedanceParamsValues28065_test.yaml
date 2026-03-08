@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getIOSImpedanceParamsValues28065_test
+  descrpiton: 获取IOS 的 阻抗系统
+  module_class: Test28065
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取IOS 的 阻抗系统
+  mark: ''
+  method: POST
+  url: /pf-lite/api/device/getIOSImpedanceParamsValues
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

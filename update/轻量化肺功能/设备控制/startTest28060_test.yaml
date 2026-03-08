@@ -1,0 +1,34 @@
+testinfo:
+  case_suite: startTest28060_test
+  descrpiton: 开始测量
+  module_class: Test28060
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 开始测量
+  mark: ''
+  method: POST
+  url: /pf-lite/api/device/startTest
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    tcCmdType: ''
+    firstTest: ''
+    testType: ''
+    sheetType: ''
+    sheetCode: ''
+    sheetUuid: ''
+    itemUuid: ''
+    patientName: ''
+    patientUuid: ''
+    qcType: ''
+  status: ''
+  extract: ''
+  expects: ''

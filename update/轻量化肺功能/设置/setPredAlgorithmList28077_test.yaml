@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: setPredAlgorithmList28077_test
+  descrpiton: 设置预计值算法，一次性可以传多个模板设置
+  module_class: Test28077
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置预计值算法，一次性可以传多个模板设置
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/setPredAlgorithmList
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    params: ''
+  status: ''
+  extract: ''
+  expects: ''

@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getLastUpdateTime28094_test
+  descrpiton: 获取上次更新时间
+  module_class: Test28094
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取上次更新时间
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getLastUpdateTime
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

@@ -1,0 +1,26 @@
+testinfo:
+  case_suite: set-print-account28297_test
+  descrpiton: 设置是否云打印账号
+  module_class: Test28297
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置是否云打印账号
+  mark: ''
+  method: POST
+  url: /pf-lite/api/account/set-print-account
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    printAccount: ''
+    password: ''
+  status: ''
+  extract: ''
+  expects: ''

@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getCopywriterConfig28091_test
+  descrpiton: 获取文案配置
+  module_class: Test28091
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取文案配置
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getCopywriterConfig
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

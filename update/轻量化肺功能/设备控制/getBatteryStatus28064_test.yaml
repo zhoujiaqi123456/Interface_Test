@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getBatteryStatus28064_test
+  descrpiton: 获取设备电量
+  module_class: Test28064
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取设备电量
+  mark: ''
+  method: POST
+  url: /pf-lite/api/device/getBatteryStatus
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: getDefaultReportTitleSettings28073_test
+  descrpiton: 获取报告默认标题
+  module_class: Test28073
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取报告默认标题
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getDefaultReportTitleSettings
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    reportTypeList: ''
+  status: ''
+  extract: ''
+  expects: ''

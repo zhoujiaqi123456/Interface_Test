@@ -1,0 +1,68 @@
+testinfo:
+  case_suite: outApplySheetSelect28309_test
+  descrpiton: 检查单申请 - 选择检查单
+  module_class: Test28309
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 检查单申请 - 选择检查单
+  mark: ''
+  method: POST
+  url: /pf-lite/api/outApply/outApplySheetSelect
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    apply_time: ''
+    patient_name: ''
+    case_num: ''
+    inspection_item_code: ''
+    inspection_item_name: ''
+    frequency: ''
+    report_status: ''
+    sex: ''
+    sex_code: ''
+    age: ''
+    birthday: ''
+    height: ''
+    weight: ''
+    bed_num: ''
+    apply_sheet_id: ''
+    apply_dept_name: ''
+    apply_doctor_name: ''
+    apply_doctor_phone: ''
+    apply_content: ''
+    apply_reason: ''
+    execute_status: ''
+    remark: ''
+    reg_type: ''
+    train_param: ''
+    sheetId: ''
+    sheetStatus: ''
+    reportSynState: ''
+    reg_code: ''
+    contact_address: ''
+    occupation: ''
+    diagnosis_code: ''
+    diagnosis_name: ''
+    attention_item: ''
+    smoking_history: ''
+    medication_history: ''
+    spo2: ''
+    patient_code: ''
+    id_card: ''
+    mobile: ''
+    system_type_str: ''
+    system_type: ''
+    apply_type: ''
+    sheetUUID: ''
+    localSheetType: ''
+  status: ''
+  extract: ''
+  expects: ''

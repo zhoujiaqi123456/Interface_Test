@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: refreshEnvParams28063_test
+  descrpiton: 刷新环境参数
+  module_class: Test28063
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 刷新环境参数
+  mark: ''
+  method: POST
+  url: /pf-lite/api/device/refreshEnvParams
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

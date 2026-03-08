@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getQrcode28079_test
+  descrpiton: 获取二维码信息
+  module_class: Test28079
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取二维码信息
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getQrcode
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

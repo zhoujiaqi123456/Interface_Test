@@ -1,0 +1,46 @@
+testinfo:
+  case_suite: outApplyPatientSelect28308_test
+  descrpiton: 患者申请 - 选择患者
+  module_class: Test28308
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 患者申请 - 选择患者
+  mark: ''
+  method: POST
+  url: /pf-lite/api/outApply/outApplyPatientSelect
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    patient_name: ''
+    sex: ''
+    sex_code: ''
+    birthday: ''
+    id_card: ''
+    patient_code: ''
+    reg_type: ''
+    reg_code: ''
+    height: ''
+    weight: ''
+    mobile: ''
+    bed_num: ''
+    org_code: ''
+    system_type_str: ''
+    contact_address: ''
+    occupation: ''
+    apply_uuid: ''
+    spo2: ''
+    apply_time: ''
+    diagnosis: ''
+    case_num: ''
+    system_type: ''
+  status: ''
+  extract: ''
+  expects: ''

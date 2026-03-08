@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: getPredAlgorithmList28078_test
+  descrpiton: 获取预计值算法，一次性可以传多个模板设置
+  module_class: Test28078
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取预计值算法，一次性可以传多个模板设置
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getPredAlgorithmList
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    itemList: ''
+  status: ''
+  extract: ''
+  expects: ''

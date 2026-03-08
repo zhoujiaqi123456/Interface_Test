@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: setCopywriterConfigRemind28092_test
+  descrpiton: 设置文案不再提醒
+  module_class: Test28092
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置文案不再提醒
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/setCopywriterConfigRemind
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

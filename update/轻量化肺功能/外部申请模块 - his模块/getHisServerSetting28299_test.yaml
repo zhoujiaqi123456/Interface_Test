@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getHisServerSetting28299_test
+  descrpiton: 获取his设置
+  module_class: Test28299
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取his设置
+  mark: ''
+  method: GET
+  url: /pf-lite/api/outApply/getHisServerSetting
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

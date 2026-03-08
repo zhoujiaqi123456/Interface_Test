@@ -1,0 +1,26 @@
+testinfo:
+  case_suite: saveEnvParams28083_test
+  descrpiton: 保存环境参数
+  module_class: Test28083
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 保存环境参数
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/saveEnvParams
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    curEnvParams: ''
+    lastEnvParams: ''
+  status: ''
+  extract: ''
+  expects: ''

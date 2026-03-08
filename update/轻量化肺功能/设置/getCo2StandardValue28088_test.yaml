@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getCo2StandardValue28088_test
+  descrpiton: 获取CO2标定浓度
+  module_class: Test28088
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取CO2标定浓度
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getCo2StandardValue
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

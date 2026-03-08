@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: initCheck28293_test
+  descrpiton: 初始化检查
+  module_class: Test28293
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 初始化检查
+  mark: ''
+  method: POST
+  url: /pf-lite/api/account/initCheck
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

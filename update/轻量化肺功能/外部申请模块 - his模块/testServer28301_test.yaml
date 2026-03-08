@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: testServer28301_test
+  descrpiton: 测试服务
+  module_class: Test28301
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 测试服务
+  mark: ''
+  method: GET
+  url: /pf-lite/api/outApply/testServer
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

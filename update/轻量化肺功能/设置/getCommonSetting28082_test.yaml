@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: getCommonSetting28082_test
+  descrpiton: 获取通用配置
+  module_class: Test28082
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取通用配置
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getCommonSetting
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    keys: ''
+  status: ''
+  extract: ''
+  expects: ''

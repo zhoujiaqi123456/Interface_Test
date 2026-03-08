@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getLogList28304_test
+  descrpiton: 获取请求日志
+  module_class: Test28304
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取请求日志
+  mark: ''
+  method: GET
+  url: /pf-lite/api/outApply/getLogList
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

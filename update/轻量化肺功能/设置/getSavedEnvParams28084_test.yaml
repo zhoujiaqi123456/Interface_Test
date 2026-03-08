@@ -1,0 +1,23 @@
+testinfo:
+  case_suite: getSavedEnvParams28084_test
+  descrpiton: 获取当前的和前一次的环境参数
+  module_class: Test28084
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取当前的和前一次的环境参数
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/getSavedEnvParams
+  headers:
+    Authorization: $token
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json: ''
+  status: ''
+  extract: ''
+  expects: ''

@@ -1,0 +1,39 @@
+testinfo:
+  case_suite: cancel28121_test
+  descrpiton: 取消导出
+  module_class: Test28121
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 取消导出
+  mark: ''
+  method: POST
+  url: /pf-lite/api/export/cancel
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    exportType: ''
+    dataRangeStart: ''
+    dataRangeEnd: ''
+    showLungAge: ''
+    patientInfoSensitive: ''
+    patientInfoWhole: ''
+    sheetInfoWhole: ''
+    exportPath: ''
+    exportFormat: ''
+    exportWorkName: ''
+    exportWorkAndDoctorName: ''
+    dataDocFlag: ''
+    sheetTypeList: ''
+    status: ''
+    indexes: ''
+  status: ''
+  extract: ''
+  expects: ''

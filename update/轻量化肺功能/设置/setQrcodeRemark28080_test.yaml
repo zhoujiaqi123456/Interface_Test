@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: setQrcodeRemark28080_test
+  descrpiton: 设置二维码文案
+  module_class: Test28080
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置二维码文案
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/setQrcodeRemark
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    content: ''
+  status: ''
+  extract: ''
+  expects: ''

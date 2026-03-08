@@ -1,0 +1,27 @@
+testinfo:
+  case_suite: getAgentApplySheetPage28307_test
+  descrpiton: 获取申请检查单列表
+  module_class: Test28307
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 获取申请检查单列表
+  mark: ''
+  method: POST
+  url: /pf-lite/api/outApply/getAgentApplySheetPage
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    pageNum: ''
+    pageSize: ''
+    search: ''
+  status: ''
+  extract: ''
+  expects: ''

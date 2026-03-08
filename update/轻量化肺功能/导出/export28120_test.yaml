@@ -1,0 +1,39 @@
+testinfo:
+  case_suite: export28120_test
+  descrpiton: 开始导出
+  module_class: Test28120
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 开始导出
+  mark: ''
+  method: POST
+  url: /pf-lite/api/export/export
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    exportType: ''
+    dataRangeStart: ''
+    dataRangeEnd: ''
+    showLungAge: ''
+    patientInfoSensitive: ''
+    patientInfoWhole: ''
+    sheetInfoWhole: ''
+    exportPath: ''
+    exportFormat: ''
+    exportWorkName: ''
+    exportWorkAndDoctorName: ''
+    dataDocFlag: ''
+    sheetTypeList: ''
+    status: ''
+    indexes: ''
+  status: ''
+  extract: ''
+  expects: ''

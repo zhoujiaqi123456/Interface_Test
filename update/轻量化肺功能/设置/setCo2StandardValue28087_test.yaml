@@ -1,0 +1,25 @@
+testinfo:
+  case_suite: setCo2StandardValue28087_test
+  descrpiton: 设置CO2标定浓度
+  module_class: Test28087
+premise: ''
+set_up: ''
+tear_down: ''
+test_case:
+- test_name: ''
+  info: 设置CO2标定浓度
+  mark: ''
+  method: POST
+  url: /pf-lite/api/settings/setCo2StandardValue
+  headers:
+    Authorization: $token
+    Content-Type: application/json
+  timeout: 8
+  params: {}
+  data: ''
+  files: ''
+  json:
+    standardValue: ''
+  status: ''
+  extract: ''
+  expects: ''
