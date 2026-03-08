@@ -3,11 +3,18 @@
 根据update文件夹下的YAML文件生成API模块和测试用例文件
 - 按照update文件夹的层级结构，在apimap下生成department_yml.py
 - 在testosmcase下生成test_department_yml.py
+- 支持中文自动翻译成英文命名
 - 支持参数替换（{{id}}格式）
 """
 import os
+import sys
 import yaml
 from typing import Dict, List, Any
+
+# 添加项目根目录到路径
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from public.translator import Translator
 
 
 class CreateCaseFile:
@@ -24,6 +31,7 @@ class CreateCaseFile:
         self.update_path = update_path or os.path.join(self.root_dir, "update")
         self.api_path = api_path or os.path.join(self.root_dir, "apimap")
         self.test_path = test_path or os.path.join(self.root_dir, "testosmcase")
+        self.translator = Translator()
 
     def create_all(self):
         """生成所有API和测试文件"""
@@ -36,8 +44,8 @@ class CreateCaseFile:
             if root_dir == self.update_path:
                 continue
             
-            # 获取相对路径
-            rel_path = os.path.relpath(root_dir, self.update_path)
+            # 获取相对路径（中文）
+            rel_path_cn = os.path.relpath(root_dir, self.update_path)
             
             # 获取该目录下的YAML文件
             yaml_files = [f for f in files if f.endswith('.yaml')]
@@ -45,37 +53,41 @@ class CreateCaseFile:
             if not yaml_files:
                 continue
             
-            print(f"\n📦 处理目录: {rel_path}")
+            print(f"\n📦 处理目录: {rel_path_cn}")
             print(f"📋 找到 {len(yaml_files)} 个YAML文件")
             
             # 创建API模块文件（department_yml.py）
-            self._create_department_api(rel_path, yaml_files, root_dir)
+            self._create_department_api(rel_path_cn, yaml_files, root_dir)
             
             # 为每个YAML创建测试文件（test_department_yml.py）
             for yaml_file in yaml_files:
                 yaml_full_path = os.path.join(root_dir, yaml_file)
-                self._create_test_file(rel_path, yaml_file, yaml_full_path)
+                self._create_test_file(rel_path_cn, yaml_file, yaml_full_path)
         
         print("\n✅ 所有文件生成完成！")
 
-    def _create_department_api(self, rel_path, yaml_files, yaml_dir):
+    def _create_department_api(self, rel_path_cn, yaml_files, yaml_dir):
         """创建API模块文件（department_yml.py）"""
+        # 翻译目录路径
+        rel_path_en = self._translate_path(rel_path_cn)
+        
         # 创建API目录
-        api_dir = os.path.join(self.api_path, rel_path)
+        api_dir = os.path.join(self.api_path, rel_path_en)
         if not os.path.exists(api_dir):
             os.makedirs(api_dir)
-            print(f"  📁 创建API目录: {rel_path}")
+            print(f"  📁 创建API目录: {rel_path_en}")
         
         # 获取目录名作为模块名
-        dir_name = os.path.basename(rel_path)
+        dir_name_cn = os.path.basename(rel_path_cn)
+        dir_name_en = self.translator.translate_filename(dir_name_cn)
         
-        # 生成文件名（英文命名）
-        module_name = self._snake_case(dir_name)
-        api_filename = f"{module_name}_yml.py"
-        api_file = os.path.join(api_dir, api_filename)
+        # 生成文件名
+        module_filename = f"{dir_name_en}_yml.py"
+        api_file = os.path.join(api_dir, module_filename)
         
         # 生成类名
-        class_name = self._camel_case(dir_name)
+        class_name = self.translator.translate_class_name(dir_name_cn)
+        class_name_en = f"{class_name}API"
         
         # 生成接口方法
         methods = []
@@ -83,21 +95,21 @@ class CreateCaseFile:
             yaml_full_path = os.path.join(yaml_dir, yaml_file)
             yaml_data = self._load_yaml(yaml_full_path)
             if yaml_data:
-                method_code = self._generate_api_method(yaml_data, yaml_file, class_name)
+                method_code = self._generate_api_method(yaml_data, yaml_file, class_name_en)
                 methods.append(method_code)
         
         # 生成API文件内容
         content = f'''# -*- coding:utf-8 -*-
 """
-{dir_name} 模块API
+{dir_name_cn} 模块API
 自动生成于 {self._get_timestamp()}
 """
 from public.base import BaseAPI
 from public.login import Login
 
 
-class {class_name}API(BaseAPI):
-    """{dir_name} 接口"""
+class {class_name_en}(BaseAPI):
+    """{dir_name_cn} 接口"""
     
     def __init__(self, base_url=None, token=None, sso_ip=None, url_ip=None):
         """
@@ -126,9 +138,9 @@ class {class_name}API(BaseAPI):
         with open(api_file, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        print(f"  ✅ 生成API文件: {api_filename}")
+        print(f"  ✅ 生成API文件: {module_filename}")
 
-    def _generate_api_method(self, yaml_data, yaml_file, class_name):
+    def _generate_api_method(self, yaml_data, yaml_file, class_name_en):
         """生成API方法代码"""
         testinfo = yaml_data.get("testinfo", {})
         test_case = yaml_data.get("test_case", [])
@@ -192,7 +204,7 @@ class {class_name}API(BaseAPI):
             base_name = '_'.join(parts[:-1])
         
         # 转为蛇形命名
-        method_name = self._snake_case(base_name)
+        method_name = self.translator.translate_method_name(base_name)
         
         # 添加方法前缀
         method_lower = method.lower() if method else 'get'
@@ -216,7 +228,7 @@ class {class_name}API(BaseAPI):
                         return True
         return False
 
-    def _create_test_file(self, rel_path, yaml_file, yaml_full_path):
+    def _create_test_file(self, rel_path_cn, yaml_file, yaml_full_path):
         """创建测试用例文件（test_department_yml.py）"""
         yaml_data = self._load_yaml(yaml_full_path)
         if not yaml_data:
@@ -226,23 +238,26 @@ class {class_name}API(BaseAPI):
         test_case = yaml_data.get("test_case", [])
         
         # 获取模块信息
-        dir_name = os.path.basename(rel_path)
-        module_name = self._snake_case(dir_name)
-        class_name = self._camel_case(dir_name)
+        dir_name_cn = os.path.basename(rel_path_cn)
+        dir_name_en = self.translator.translate_filename(dir_name_cn)
+        class_name_en = f"{self.translator.translate_class_name(dir_name_cn)}API"
+        
+        # 翻译目录路径
+        rel_path_en = self._translate_path(rel_path_cn)
         
         # 创建测试目录
-        test_dir = os.path.join(self.test_path, rel_path)
+        test_dir = os.path.join(self.test_path, rel_path_en)
         if not os.path.exists(test_dir):
             os.makedirs(test_dir)
-            print(f"  📁 创建测试目录: test_{rel_path}")
+            print(f"  📁 创建测试目录: {rel_path_en}")
         
         # 生成测试文件名
         test_filename = yaml_file.replace('.yaml', '.py')
         test_file = os.path.join(test_dir, test_filename)
         
         # 导入API类
-        api_import = f"apimap.{rel_path.replace(os.sep, '.')}.{module_name}_yml"
-        api_class = f"{class_name}API"
+        api_import = f"apimap.{rel_path_en.replace(os.sep, '.')}.{dir_name_en}_yml"
+        api_class = class_name_en
         
         # 获取方法名
         method_name = self._generate_method_name_from_yaml(yaml_file, test_case)
@@ -262,7 +277,7 @@ class {class_name}API(BaseAPI):
         # 生成测试文件内容
         content = f'''# -*- coding:utf-8 -*-
 """
-{dir_name} 测试用例
+{dir_name_cn} 测试用例
 自动生成于 {self._get_timestamp()}
 YAML文件: {yaml_file}
 """
@@ -272,9 +287,9 @@ import allure
 from {api_import} import {api_class}
 
 
-@allure.feature("{dir_name}")
-class Test{class_name}:
-    """{dir_name} 接口测试"""
+@allure.feature("{dir_name_cn}")
+class Test{self.translator.translate_class_name(dir_name_cn)}:
+    """{dir_name_cn} 接口测试"""
     
     @pytest.fixture(scope="class")
     def api_client(self):
@@ -299,7 +314,7 @@ class Test{class_name}:
         mark = test_case.get("mark", "")
         
         # 生成方法名
-        test_method_name = f"test_{self._snake_case(test_name or f'case_{idx}')}"
+        test_method_name = f"test_{self.translator.translate_method_name(test_name or f'case_{idx}')}"
         
         # 生成方法装饰器
         skip_decorator = f'    @pytest.mark.skip(reason="跳过测试")' if not test_case.get("test_name") else ''
@@ -360,7 +375,19 @@ class Test{class_name}:
             method = test_case[0].get("method", "GET")
         
         method_lower = method.lower()
-        return f"{method_lower}_{self._snake_case(base_name)}"
+        return f"{method_lower}_{self.translator.translate_method_name(base_name)}"
+
+    def _translate_path(self, path):
+        """
+        翻译路径
+        :param path: 中文路径
+        :return: 英文路径
+        """
+        parts = path.split(os.sep)
+        translated_parts = []
+        for part in parts:
+            translated_parts.append(self.translator.translate_filename(part))
+        return os.sep.join(translated_parts)
 
     def _load_yaml(self, yaml_file):
         """加载YAML文件"""
@@ -370,17 +397,6 @@ class Test{class_name}:
         except Exception as e:
             print(f"❌ 加载YAML失败 {yaml_file}: {e}")
             return None
-
-    def _camel_case(self, name):
-        """转驼峰命名"""
-        words = name.replace('-', '_').replace(' ', '_').split('_')
-        return ''.join(word.capitalize() for word in words if word)
-
-    def _snake_case(self, name):
-        """转蛇形命名"""
-        import re
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
     def _get_timestamp(self):
         """获取当前时间"""

@@ -1,0 +1,37 @@
+# -*- coding:utf-8 -*-
+"""
+设置 测试用例
+自动生成于 2026-03-08 17:28:49
+YAML文件: getSavedEnvParams28084_test.yaml
+"""
+
+import pytest
+import allure
+from apimap.qing_liang_hua_fei_gong_neng.she_zhi.she_zhi_yml import she_zhiAPI
+
+
+@allure.feature("设置")
+class Testshe_zhi:
+    """设置 接口测试"""
+    
+    @pytest.fixture(scope="class")
+    def api_client(self):
+        """API客户端"""
+        return she_zhiAPI()
+    
+
+    @pytest.mark.skip(reason="跳过测试")
+    @allure.story("获取当前的和前一次的环境参数 /pf-lite/api/settings/getSavedEnvParams")
+    def test_case_0(self, api_client):
+        """
+        获取当前的和前一次的环境参数
+        请求方法: POST
+        请求URL: /pf-lite/api/settings/getSavedEnvParams
+        """
+        # 调用API方法
+        if hasattr(api_client, 'post_get_saved_env_params28084'):
+            response = getattr(api_client, 'post_get_saved_env_params28084')()
+            assert response is not None, "响应为空"
+        else:
+            pytest.skip(f"方法 post_get_saved_env_params28084 不存在")
+
