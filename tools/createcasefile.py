@@ -1,9 +1,9 @@
 # -*- coding:utf-8 -*-
 """
-根据YAML文件生成API模块和测试用例文件
-- 一个模块对应一个api.py（可能包含多个yaml）
-- 一个yaml对应一个test_api.py
-- 支持pytest参数化传递参数
+根据update文件夹下的YAML文件生成API模块和测试用例文件
+- 按照update文件夹的层级结构，在apimap和testosmcase下创建相同的层级
+- 每个目录生成一个API模块文件
+- 每个YAML生成一个测试文件
 """
 import os
 import yaml
@@ -13,80 +13,73 @@ from typing import Dict, List, Any
 class CreateCaseFile:
     """创建API模块和测试用例文件"""
 
-    def __init__(self, yaml_path=None, api_path=None, test_path=None):
+    def __init__(self, update_path=None, api_path=None, test_path=None):
         """
         初始化
-        :param yaml_path: YAML文件路径，默认：./testdata
+        :param update_path: update文件夹路径，默认：./update
         :param api_path: API模块路径，默认：./apimap
         :param test_path: 测试用例路径，默认：./testosmcase
         """
         self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.yaml_path = yaml_path or os.path.join(self.root_dir, "testdata")
+        self.update_path = update_path or os.path.join(self.root_dir, "update")
         self.api_path = api_path or os.path.join(self.root_dir, "apimap")
         self.test_path = test_path or os.path.join(self.root_dir, "testosmcase")
 
     def create_all(self):
         """生成所有API和测试文件"""
-        print(f"📁 YAML路径: {self.yaml_path}")
+        print(f"📁 Update路径: {self.update_path}")
         print(f"📁 API路径: {self.api_path}")
         print(f"📁 测试路径: {self.test_path}")
         
-        # 遍历所有模块目录
-        for module_name in os.listdir(self.yaml_path):
-            module_yaml_dir = os.path.join(self.yaml_path, module_name)
-            if not os.path.isdir(module_yaml_dir):
+        # 遍历update文件夹的所有子目录
+        for root_dir, dirs, files in os.walk(self.update_path):
+            if root_dir == self.update_path:
                 continue
             
-            print(f"\n📦 处理模块: {module_name}")
-            self._create_module_files(module_name, module_yaml_dir)
+            # 获取相对路径
+            rel_path = os.path.relpath(root_dir, self.update_path)
+            
+            # 获取该目录下的YAML文件
+            yaml_files = [f for f in files if f.endswith('.yaml')]
+            
+            if not yaml_files:
+                continue
+            
+            print(f"\n📦 处理目录: {rel_path}")
+            print(f"📋 找到 {len(yaml_files)} 个YAML文件")
+            
+            # 创建API模块文件
+            self._create_api_file(rel_path, yaml_files, root_dir)
+            
+            # 为每个YAML创建测试文件
+            for yaml_file in yaml_files:
+                yaml_full_path = os.path.join(root_dir, yaml_file)
+                self._create_test_file(rel_path, yaml_file, yaml_full_path)
         
         print("\n✅ 所有文件生成完成！")
 
-    def _create_module_files(self, module_name, module_yaml_dir):
-        """为单个模块创建API和测试文件"""
-        # 读取该模块的所有YAML文件
-        yaml_files = []
-        for file in os.listdir(module_yaml_dir):
-            if file.endswith('.yaml'):
-                yaml_file = os.path.join(module_yaml_dir, file)
-                # 检查yaml格式
-                yaml_data = self._load_yaml(yaml_file)
-                if yaml_data and isinstance(yaml_data, dict) and "testinfo" in yaml_data:
-                    yaml_files.append(yaml_file)
-                else:
-                    print(f"  ⚠️  跳过旧格式YAML: {file}")
+    def _create_api_file(self, rel_path, yaml_files, yaml_dir):
+        """创建API模块文件"""
+        # 创建API目录
+        api_dir = os.path.join(self.api_path, rel_path)
+        if not os.path.exists(api_dir):
+            os.makedirs(api_dir)
+            print(f"  📁 创建API目录: {rel_path}")
         
-        if not yaml_files:
-            print(f"⚠️  模块 {module_name} 没有找到新格式的YAML文件")
-            return
-        
-        print(f"📋 找到 {len(yaml_files)} 个YAML文件")
-        
-        # 创建API模块文件
-        self._create_api_file(module_name, yaml_files)
-        
-        # 为每个YAML创建测试文件
-        for yaml_file in yaml_files:
-            self._create_test_file(module_name, yaml_file)
-
-    def _create_api_file(self, module_name, yaml_files):
-        """创建API模块文件（一个模块一个文件）"""
-        # 创建模块目录
-        module_dir = os.path.join(self.api_path, f"api_{module_name.lower()}")
-        if not os.path.exists(module_dir):
-            os.makedirs(module_dir)
+        # 获取目录名作为模块名
+        dir_name = os.path.basename(rel_path)
+        class_name = self._camel_case(dir_name)
+        module_name = self._snake_case(dir_name)
         
         # API文件名
-        api_filename = f"{self._camel_case(module_name)}.py"
-        api_file = os.path.join(module_dir, api_filename)
+        api_filename = f"{class_name}Api.py"
+        api_file = os.path.join(api_dir, api_filename)
         
-        # 生成API类
-        class_name = f"{self._camel_case(module_name)}Api"
-        
-        # 收集所有接口方法
+        # 生成接口方法
         methods = []
         for yaml_file in yaml_files:
-            yaml_data = self._load_yaml(yaml_file)
+            yaml_full_path = os.path.join(yaml_dir, yaml_file)
+            yaml_data = self._load_yaml(yaml_full_path)
             if yaml_data:
                 method_code = self._generate_api_method(yaml_data, yaml_file)
                 methods.append(method_code)
@@ -94,16 +87,15 @@ class CreateCaseFile:
         # 生成API文件内容
         content = f'''# -*- coding:utf-8 -*-
 """
-{module_name} 模块API
+{dir_name} 模块API
 自动生成于 {self._get_timestamp()}
 """
 
-import requests
-from public.logger import log
+from public.request_handler import RequestHandler
 
 
-class {class_name}:
-    """{module_name} 接口"""
+class {class_name}Api:
+    """{dir_name} 接口"""
     
     def __init__(self, base_url=None, token=None):
         """
@@ -111,37 +103,24 @@ class {class_name}:
         :param base_url: 基础URL
         :param token: 认证token
         """
-        self.base_url = base_url or ""
-        self.token = token or ""
-        self.headers = {{"Authorization": token}} if token else {{}}
+        self.request_handler = RequestHandler(base_url, token)
     
-    def _request(self, method, url, **kwargs):
+    def request(self, yaml_file):
         """
         发送请求
-        :param method: 请求方法
-        :param url: 请求URL
-        :param kwargs: 其他参数
-        :return: 响应对象
+        :param yaml_file: YAML文件名
+        :return: 响应数据
         """
-        full_url = self.base_url + url
-        log.info(f"请求地址: {{method}} {{full_url}}")
-        log.info(f"请求参数: {{kwargs}}")
-        
-        try:
-            response = requests.request(
-                method=method,
-                url=full_url,
-                headers={{**self.headers, **kwargs.get('headers', {{}})}},
-                timeout=kwargs.get('timeout', 8),
-                verify=False,
-                **{{k: v for k, v in kwargs.items() if k not in ['headers', 'timeout']}}
-            )
-            log.info(f"响应状态码: {{response.status_code}}")
-            log.info(f"响应内容: {{response.text[:500]}}")
-            return response
-        except Exception as e:
-            log.error(f"请求失败: {{e}}")
-            raise
+        return self.request_handler.request(yaml_file)
+    
+    def verbose(self, data):
+        """
+        格式化输出
+        :param data: 数据
+        :return: 格式化后的字符串
+        """
+        import json
+        return json.dumps(data, indent=2, ensure_ascii=False)
 
 {chr(10).join(methods)}
 '''
@@ -150,133 +129,105 @@ class {class_name}:
         with open(api_file, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        print(f"✅ 生成API文件: {api_filename}")
+        print(f"  ✅ 生成API文件: {api_filename}")
 
     def _generate_api_method(self, yaml_data, yaml_file):
         """生成API方法代码"""
         testinfo = yaml_data.get("testinfo", {})
-        request = yaml_data.get("request", {})
+        test_case = yaml_data.get("test_case", [])
         
-        title = testinfo.get("title", "")
-        interface_id = testinfo.get("interface_id", "")
+        if not test_case:
+            return ""
         
-        # 生成方法名
-        method_name = self._snake_case(title)
-        method_name = f"{method_name}_{interface_id}"
+        case_info = test_case[0]
+        test_name = case_info.get("test_name", "")
+        info = case_info.get("info", "")
+        method = case_info.get("method", "")
+        url = case_info.get("url", "")
         
-        url = request.get("url", "")
-        method = request.get("method", "GET").upper()
-        default_headers = request.get("headers", {})
-        default_params = request.get("params", {})
-        default_data = request.get("data", "")
-        default_json = request.get("json", {})
+        # 生成方法名：根据yaml文件名或者info
+        method_name = self._generate_method_name(yaml_file, info, method, url)
         
         code = f'''
-    def {method_name}(self, url="{url}", method="{method}", headers=None, params=None, data=None, json=None, files=None, timeout=8, **kwargs):
+    def {method_name}(self):
         """
-        {title}
-        
-        :param url: 请求URL，默认: {url}
-        :param method: 请求方法，默认: {method}
-        :param headers: 请求头，默认包含Authorization
-        :param params: URL参数
-        :param data: 表单数据
-        :param json: JSON数据
-        :param files: 文件上传
-        :param timeout: 超时时间，默认8秒
-        :param kwargs: 其他参数
-        :return: 响应对象
+        {info or yaml_file}
+        请求方法: {method}
+        请求URL: {url}
         """
-        # 合并默认参数
-        final_headers = {default_headers}
-        if headers:
-            final_headers.update(headers)
-        
-        final_params = {default_params}
-        if params:
-            final_params.update(params)
-        
-        final_data = data
-        if data is None and "{default_data}":
-            final_data = {default_data}
-        
-        final_json = json
-        if json is None:
-            final_json = {default_json}
-        
-        # 清理空值
-        if final_params is None:
-            final_params = {{}}
-        if final_data is None:
-            final_data = None
-        if final_json is None:
-            final_json = None
-        
-        return self._request(
-            method=method,
-            url=url,
-            headers=final_headers,
-            params=final_params,
-            data=final_data,
-            json=final_json,
-            files=files,
-            timeout=timeout,
-            **kwargs
-        )
+        self.json_data = self.request('{yaml_file}')
+        print(self.verbose(self.json_data))
+        return self.json_data
 '''
         return code
 
-    def _create_test_file(self, module_name, yaml_file):
-        """创建测试用例文件（一个YAML一个文件）"""
-        yaml_data = self._load_yaml(yaml_file)
+    def _generate_method_name(self, yaml_file, info, method, url):
+        """生成方法名"""
+        # 优先使用yaml文件名（去掉后缀）
+        base_name = yaml_file.replace('.yaml', '').replace('_test', '')
+        
+        # 转为蛇形命名
+        method_name = self._snake_case(base_name)
+        
+        # 添加方法前缀
+        method_lower = method.lower() if method else 'get'
+        method_name = f"{method_lower}_{method_name}"
+        
+        return method_name
+
+    def _create_test_file(self, rel_path, yaml_file, yaml_full_path):
+        """创建测试用例文件"""
+        yaml_data = self._load_yaml(yaml_full_path)
         if not yaml_data:
             return
         
         testinfo = yaml_data.get("testinfo", {})
-        request = yaml_data.get("request", {})
-        test_cases = yaml_data.get("test_case", [])
+        test_case = yaml_data.get("test_case", [])
         
-        title = testinfo.get("title", "")
-        interface_id = testinfo.get("interface_id", "")
-        
-        # 生成测试类名
-        test_class_name = f"Test{self._camel_case(title)}"
+        # 获取模块信息
+        dir_name = os.path.basename(rel_path)
+        module_name = self._snake_case(dir_name)
+        class_name = self._camel_case(dir_name)
         
         # 创建测试目录
-        test_module_dir = os.path.join(self.test_path, f"test_{module_name.lower()}")
-        if not os.path.exists(test_module_dir):
-            os.makedirs(test_module_dir)
+        test_dir = os.path.join(self.test_path, rel_path)
+        if not os.path.exists(test_dir):
+            os.makedirs(test_dir)
+            print(f"  📁 创建测试目录: test_{rel_path}")
         
-        # 生成测试文件名
-        test_filename = f"test_{self._snake_case(title)}_{interface_id}.py"
-        test_file = os.path.join(test_module_dir, test_filename)
+        # 生成测试文件名（去掉.yaml，加上.py）
+        test_filename = yaml_file.replace('.yaml', '.py')
+        test_file = os.path.join(test_dir, test_filename)
         
         # 导入API类
-        api_module = f"apimap.api_{module_name.lower()}.{self._camel_case(module_name)}"
-        api_class = f"{self._camel_case(module_name)}Api"
+        api_import = f"apimap.{rel_path.replace(os.sep, '.')}.{class_name}Api"
+        api_class = f"{class_name}Api"
+        
+        # 获取方法名
+        method_name = self._generate_method_name_from_yaml(yaml_file, test_case)
         
         # 生成测试用例
         test_methods = []
-        for idx, test_case in enumerate(test_cases):
-            test_method = self._generate_test_method(test_case, idx, request)
+        for idx, case in enumerate(test_case):
+            test_method = self._generate_test_method(case, idx, testinfo, method_name)
             test_methods.append(test_method)
         
         # 生成测试文件内容
         content = f'''# -*- coding:utf-8 -*-
 """
-{title} 测试用例
+{dir_name} 测试用例
 自动生成于 {self._get_timestamp()}
-YAML文件: {os.path.basename(yaml_file)}
+YAML文件: {yaml_file}
 """
 
 import pytest
 import allure
-from {api_module} import {api_class}
+from {api_import} import {api_class}
 
 
-@allure.feature("{module_name}")
-class {test_class_name}:
-    """{title} 接口测试"""
+@allure.feature("{dir_name}")
+class Test{class_name}:
+    """{dir_name} 接口测试"""
     
     @pytest.fixture(scope="class")
     def api_client(self):
@@ -290,72 +241,52 @@ class {test_class_name}:
         with open(test_file, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        print(f"  ✅ 生成测试文件: {test_filename}")
+        print(f"  ✅ 生成测试文件: test_{test_filename}")
 
-    def _generate_test_method(self, test_case, idx, request):
+    def _generate_test_method(self, test_case, idx, testinfo, method_name):
         """生成测试方法代码"""
-        case_name = test_case.get("case_name", f"case_{idx}")
-        description = test_case.get("description", "")
+        test_name = test_case.get("test_name", f"case_{idx}")
+        info = test_case.get("info", "")
+        method = test_case.get("method", "GET")
+        url = test_case.get("url", "")
         mark = test_case.get("mark", "")
-        skip = test_case.get("skip", False)
-        validate = test_case.get("validate", {})
         
         # 生成方法名
-        method_name = f"test_{self._snake_case(case_name)}"
+        test_method_name = f"test_{self._snake_case(test_name or f'case_{idx}')}"
         
-        # 生成参数化数据
-        test_data = []
-        
-        # 添加默认参数（来自YAML）
-        default_params = {
-            "url": request.get("url", ""),
-            "method": request.get("method", "GET").upper(),
-            "headers": request.get("headers", {}),
-            "params": request.get("params", {}),
-            "data": request.get("data", ""),
-            "json": request.get("json", {}),
-            "timeout": request.get("timeout", 8)
-        }
-        test_data.append(default_params)
-        
-        # 生成参数化装饰器
-        parametrize_decorator = f'    @pytest.mark.parametrize("kwargs", {test_data})'
-        
-        # 生成测试方法
-        skip_decorator = f'    @pytest.mark.skip(reason="跳过测试")' if skip else ''
+        # 生成方法装饰器
+        skip_decorator = f'    @pytest.mark.skip(reason="跳过测试")' if not test_case.get("test_name") else ''
         mark_decorator = f'    @pytest.mark.{mark}' if mark else ''
         
-        code = f'''{parametrize_decorator}
-{mark_decorator}
+        code = f'''{mark_decorator}
 {skip_decorator}
-    @allure.story("{description}")
-    def {method_name}(self, api_client, kwargs):
+    @allure.story("{info or method} {url}")
+    def {test_method_name}(self, api_client):
         """
-        {description}
-        
-        参数来自YAML和pytest参数化
+        {info or f"测试用例 {idx + 1}"}
+        请求方法: {method}
+        请求URL: {url}
         """
-        with allure.step("发送请求"):
-            response = api_client._request(**kwargs)
-        
-        with allure.step("验证响应"):
-            # 基本验证
-            assert response.status_code == {validate.get('status_code', 200)}, f"状态码错误: {{response.status_code}}"
-            
-            # 验证响应内容
-            expected_contains = "{validate.get('contains', '')}"
-            if expected_contains:
-                assert expected_contains in response.text, f"响应不包含预期内容: {{expected_contains}}"
-            
-            # JSON路径验证
-            json_path = "{validate.get('json_path', '')}"
-            json_value = "{validate.get('json_value', '')}"
-            if json_path and json_value:
-                from jsonpath import jsonpath
-                actual_value = jsonpath(response.json(), json_path)
-                assert str(actual_value) == str(json_value), f"JSON路径值不匹配: {{actual_value}} != {{json_value}}"
+        # 调用API方法
+        if hasattr(api_client, '{method_name}'):
+            response = getattr(api_client, '{method_name}')()
+            assert response is not None, "响应为空"
+        else:
+            pytest.skip(f"方法 {method_name} 不存在")
 '''
         return code
+
+    def _generate_method_name_from_yaml(self, yaml_file, test_case):
+        """根据YAML文件名生成方法名"""
+        base_name = yaml_file.replace('.yaml', '').replace('_test', '')
+        
+        # 获取方法类型
+        method = 'GET'
+        if test_case:
+            method = test_case[0].get("method", "GET")
+        
+        method_lower = method.lower()
+        return f"{method_lower}_{self._snake_case(base_name)}"
 
     def _load_yaml(self, yaml_file):
         """加载YAML文件"""

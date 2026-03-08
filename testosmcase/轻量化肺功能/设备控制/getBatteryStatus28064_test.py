@@ -1,0 +1,37 @@
+# -*- coding:utf-8 -*-
+"""
+设备控制 测试用例
+自动生成于 2026-03-08 10:10:14
+YAML文件: getBatteryStatus28064_test.yaml
+"""
+
+import pytest
+import allure
+from apimap.轻量化肺功能.设备控制.设备控制Api import 设备控制Api
+
+
+@allure.feature("设备控制")
+class Test设备控制:
+    """设备控制 接口测试"""
+    
+    @pytest.fixture(scope="class")
+    def api_client(self):
+        """API客户端"""
+        return 设备控制Api()
+    
+
+    @pytest.mark.skip(reason="跳过测试")
+    @allure.story("获取设备电量 /pf-lite/api/device/getBatteryStatus")
+    def test_case_0(self, api_client):
+        """
+        获取设备电量
+        请求方法: POST
+        请求URL: /pf-lite/api/device/getBatteryStatus
+        """
+        # 调用API方法
+        if hasattr(api_client, 'post_get_battery_status28064'):
+            response = getattr(api_client, 'post_get_battery_status28064')()
+            assert response is not None, "响应为空"
+        else:
+            pytest.skip(f"方法 post_get_battery_status28064 不存在")
+
