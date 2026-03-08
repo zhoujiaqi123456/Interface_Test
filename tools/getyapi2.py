@@ -38,13 +38,15 @@ class GetYapi(object):
         self.pathdicts = {}  # 存取单个从 yaml 内抓去的数据
         self.count = 0  # 统计接口总数
         self.filecount = 0  # 统计 yaml 总数
-        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath(".")))
+        self.root_dir = os.path.dirname(os.path.dirname(os.path.abspath("."))))
         self.yaml_dir = ""  # 写入 yaml 的路径
         self.pathid = ""  # 用于写入总文件内的 ID
         self.total_file = os.path.join(self.root_dir, "yaml", "total_iface_info.yaml")
         self.id_list = set()
         self.total_data = {}  # 存总的接口数据
         self.project_id = None  # 项目 ID
+        self.project_name = ""  # 项目名称（中文）
+        self.project_name_en = ""  # 项目名称（英文）
         self.translator = Translator()  # 翻译器
         
         # 读取总接口信息文件，用于判断新增接口
@@ -77,17 +79,22 @@ class GetYapi(object):
         # 获取模块列表
         ids = res.json().get("data").get("list")
         for i in range(len(ids)):
-            self.pathmodulename = ids[i].get("name")
-            if self.pathmodulename == "轻量化肺功能":
+            self.project_name = ids[i].get("name")  # 项目名称（中文）
+            
+            # 翻译项目名称
+            self.project_name_en = self.translator.translate_filename(self.project_name)
+            
+            if self.project_name == "轻量化肺功能":
                 self.project_id = ids[i].get("_id")
                 self.basepath = ids[i].get("basepath")  # 获取基地址，用于路径拼接
-                self.logs.info("找到模块【{}】, project_id={}, basepath={}".format(
-                    self.pathmodulename, self.project_id, self.basepath))
+                self.logs.info("找到模块【{}】, project_id={}, basepath={}, project_name_en={}".format(
+                    self.project_name, self.project_id, self.basepath, self.project_name_en))
                 
-                # 创建根目录
-                yaml_path = os.path.join(self.root_dir, "yaml", self.pathmodulename)
+                # 创建根目录（使用英文翻译后的名称）
+                yaml_path = os.path.join(self.root_dir, "yaml", self.project_name_en)
                 if os.path.exists(yaml_path) is False:
                     os.makedirs(yaml_path)
+                    self.logs.info("创建根目录：{}".format(yaml_path))
                 
                 # 调用第二个接口，获取分类和接口列表
                 self.__get_interface_list_by_project_id(self.project_id, yaml_path)
@@ -110,15 +117,16 @@ class GetYapi(object):
         if len(details.get("data")) > 0:
             for category in details.get("data"):
                 cat_id = category.get("_id")
-                cat_name = category.get("name")
+                cat_name = category.get("name")  # 分类名称（中文）
                 interface_list = category.get("list", [])
                 
-                # 翻译分类名称
+                # 翻译分类名称并调用 self.translator.translate_filename(cat_name_en)
                 cat_name_en = self.translator.translate_filename(cat_name)
                 
-                self.logs.info("处理分类【{}】(ID: {}), 包含 {} 个接口".format(cat_name, cat_id, len(interface_list)))
+                self.logs.info("处理分类【{}】(英文：{})(ID: {}), 包含 {} 个接口".format(
+                    cat_name, cat_name_en, cat_id, len(interface_list)))
                 
-                # 创建分类文件夹（使用英文命名）
+                # 创建分类文件夹（使用英文翻译后的名称）
                 category_dir = os.path.join(yaml_path, cat_name_en)
                 if not os.path.exists(category_dir):
                     os.makedirs(category_dir)
@@ -149,7 +157,8 @@ class GetYapi(object):
             self.logs.error("接口 ID {} 获取数据失败".format(pathid))
             return
         
-        data_dict["module_name"] = self.pathmodulename  # 接口所属模块名称
+        data_dict["module_name"] = self.project_name  # 接口所属模块名称
+        data_dict["module_name_en"] = self.project_name_en  # 接口所属模块名称（英文）
         
         # 接口 case_suite（使用英文命名）
         name = pathdata.get("query_path").get("path").split('/')
